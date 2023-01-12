@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="CodeFiles">
+      <UniqueIdentifier>{f65c809b-a185-48c6-8a29-0848c05d29f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="HeaderFiles">
+      <UniqueIdentifier>{ae4fabbb-06b5-4f0e-afad-634375c7d89b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CudaFiles">
+      <UniqueIdentifier>{ae55e1bf-6bd1-41bf-b8ae-c7a81ca832ed}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="DeviceKernel.cu">
+      <Filter>CudaFiles</Filter>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Main.cpp">
+      <Filter>CodeFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine.cpp">
+      <Filter>CodeFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics.cpp">
+      <Filter>CodeFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="Keyboarg.cpp">
+      <Filter>CodeFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="Mouse.cpp">
+      <Filter>CodeFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="Window.cpp">
+      <Filter>CodeFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="Timer.cpp">
+      <Filter>CodeFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="Vector.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Engine.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="Window.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="Winlib.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="Keyboard.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="Mouse.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceKernel.cuh">
+      <Filter>CudaFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="Matrix.h" />
+    <ClInclude Include="Vector.h" />
+  </ItemGroup>
+</Project>
