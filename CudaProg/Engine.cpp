@@ -53,21 +53,21 @@ void Engine::Run(Window& wnd)
 void Engine::Update(Window& wnd)
 {
 
-	if (wnd.kbd.KeyIsPressed('D'))	cam.pos -= multiple(crossProduct(normalize(cam.direction), cam.up) , 0.02);
+	if (wnd.kbd.KeyIsPressed('D'))	cam.pos -= multiple(crossProduct(normalize(cam.getDirection()), cam.up) , 0.02);
 	
-	if (wnd.kbd.KeyIsPressed('A'))	cam.pos += multiple(crossProduct(normalize(cam.direction), cam.up), 0.02);
+	if (wnd.kbd.KeyIsPressed('A'))	cam.pos += multiple(crossProduct(normalize(cam.getDirection()), cam.up), 0.02);
 
-	if (wnd.kbd.KeyIsPressed('R'))	cam.pos.y -= 0.02;
+	if (wnd.kbd.KeyIsPressed('F'))	cam.pos.y -= 0.02;
 
-	if (wnd.kbd.KeyIsPressed('F'))	cam.pos.y += 0.02;
+	if (wnd.kbd.KeyIsPressed('R'))	cam.pos.y += 0.02;
 
-	if (wnd.kbd.KeyIsPressed('S'))	cam.pos += multiple(normalize(cam.direction), 0.02);
+	if (wnd.kbd.KeyIsPressed('S'))	cam.pos += multiple(normalize(cam.getDirection()), 0.02);
 
-	if (wnd.kbd.KeyIsPressed('W'))	cam.pos -= multiple(normalize(cam.direction), 0.02);
+	if (wnd.kbd.KeyIsPressed('W'))	cam.pos -= multiple(normalize(cam.getDirection()), 0.02);
 
-	if (wnd.kbd.KeyIsPressed('Z'))  cam.direction = multyply(cam.direction, rotateY(10));
+	if (wnd.kbd.KeyIsPressed('Z'))  cam.angleX += 2;
 
-	if (wnd.kbd.KeyIsPressed('C'))	cam.direction = multyply(cam.direction, rotateY(-10));
+	if (wnd.kbd.KeyIsPressed('C'))	cam.angleX -= 2;
 }
 
 LARGE_INTEGER Engine::EngineGetWallClock() const
@@ -93,10 +93,11 @@ void Engine::ComposeFrame()
 	dev.drawPlane(plan.getPlane(in, cam), 10, 200, 10);
 	//dev.drawPlane(flor.getPlane(90, cam), 60, 60, 60);
 	
-
+	Vector3D v = cam.getDirection();
 
 	dev.drawPixel(in, 0, 255, 255, 255);
 	dev.drawPixel(144, 1, 255, 255, 255);
+	dev.drawPixel(540, 360, 255, 255, 255);
 	
 	in += 1;
 	if (in > 144) in = 0;

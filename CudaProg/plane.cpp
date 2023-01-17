@@ -22,9 +22,12 @@ plane plane::getPlane(float angle, Camera cam)
 	//Matrix p(Look(Vector3D(cam.pos), Vector3D(cam.direction), Vector3D(1, 0, 0)));
 	Matrix p (translate(cam.pos));
 	Matrix m = rotateZ(180);
+	Matrix l = rotateY(cam.angleX);
+	Matrix k = rotateX(cam.angleY);
+	m *= l;
 	m *= p;
-	//Matrix l = rotateY(cam.direction.x);
-	//l *= translate(Vector3D(cam.pos.y, -0.5 + cam.pos.z, 2 + cam.pos.x));
+	
+
 	plane pk(multyply(p1, m),
 			 multyply(p2, m),
 			 multyply(p3, m),
