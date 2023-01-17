@@ -3,7 +3,11 @@
 Engine::Engine(Window& wnd)
 	:
 	gfx(wnd.GetWindowWidth(), wnd.GetWindowHeight()),
-	dev(wnd.GetWindowHeight(), wnd.GetWindowWidth(), wnd.GetColorBuffer())
+	dev(wnd.GetWindowHeight(), wnd.GetWindowWidth(), wnd.GetColorBuffer()),
+	pl(Vector3D(-0.5, 0.5, 0), Vector3D(0.5, 0.5, 0), Vector3D(-0.5, -0.5, 0), Vector3D(0.5, -0.5, 0), 255, 200, 2),
+	plan(Vector3D(-0.5, 0.5, 0), Vector3D(-0.5, 0.5, 1), Vector3D(-0.5, -0.5, 0), Vector3D(-0.5, -0.5, 1), 255, 200, 2),
+	pl2(Vector3D(-0.5, -0.5, 1), Vector3D(0.5, -0.5, 1), Vector3D(-0.5, -0.5, 0), Vector3D(0.5, -0.5, 0), 255, 200, 2),
+	flor(Vector3D(-3, 3, 1), Vector3D(3, 3, 1), Vector3D(-3, -3, 1), Vector3D(3, -3, 1), 255, 200, 2)
 {
 	Colors = wnd.GetColorBuffer();
 	QueryPerformanceFrequency(&PerfCountFrequecyResult);
@@ -49,23 +53,21 @@ void Engine::Run(Window& wnd)
 void Engine::Update(Window& wnd)
 {
 
-	if (wnd.kbd.KeyIsPressed('W'))
-	{
-		playerx += 3;
-	}
-	if (wnd.kbd.KeyIsPressed('S'))
-	{
-		playerx -= 3;
-	}
-	if (wnd.kbd.KeyIsPressed('A'))
-	{
+	if (wnd.kbd.KeyIsPressed('D'))	cam.pos -= multiple(crossProduct(normalize(cam.direction), cam.up) , 0.02);
+	
+	if (wnd.kbd.KeyIsPressed('A'))	cam.pos += multiple(crossProduct(normalize(cam.direction), cam.up), 0.02);
 
-	}
-	if (wnd.kbd.KeyIsPressed('D'))
-	{
+	if (wnd.kbd.KeyIsPressed('R'))	cam.pos.y -= 0.02;
 
-	}
+	if (wnd.kbd.KeyIsPressed('F'))	cam.pos.y += 0.02;
 
+	if (wnd.kbd.KeyIsPressed('S'))	cam.pos += multiple(normalize(cam.direction), 0.02);
+
+	if (wnd.kbd.KeyIsPressed('W'))	cam.pos -= multiple(normalize(cam.direction), 0.02);
+
+	if (wnd.kbd.KeyIsPressed('Z'))  cam.direction = multyply(cam.direction, rotateY(10));
+
+	if (wnd.kbd.KeyIsPressed('C'))	cam.direction = multyply(cam.direction, rotateY(-10));
 }
 
 LARGE_INTEGER Engine::EngineGetWallClock() const
@@ -83,21 +85,23 @@ float Engine::EngineGetSecondsElapsed(LARGE_INTEGER Start, LARGE_INTEGER End) co
 
 void Engine::ComposeFrame()
 {
-	//gfx.ClearScreenSuperFast(Colors);
-	//*********************************************************************************
-	//gfx.DrawElips(Colors, 240, 240, 200, 200, 20, 200);
-
-
-	dev.drawCircle(200, 200, 100, 200, 200, 0);
-
-	//dev.drawLine(10, 20, 40, 50, 255, 255, 255);
 
 	
-	dev.drawPoligon(20, 10, 400, 50, 200, 180, 255, 255, 255);
+	
+	dev.drawPlane(pl2.getPlane(in, cam), 10, 10, 200);
+	dev.drawPlane(pl.getPlane(in, cam), 200, 10, 10);
+	dev.drawPlane(plan.getPlane(in, cam), 10, 200, 10);
+	//dev.drawPlane(flor.getPlane(90, cam), 60, 60, 60);
 	
 
+
+	dev.drawPixel(in, 0, 255, 255, 255);
+	dev.drawPixel(144, 1, 255, 255, 255);
+	
+	in += 1;
+	if (in > 144) in = 0;
 
 	//*********************************************************************************
 	dev.copyDeviceToHost(*Colors);
-	dev.cleanDeviceMem(100, 100, 100);
+	dev.cleanDeviceMem(30, 30, 30);
 }

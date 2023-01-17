@@ -60,6 +60,10 @@ __global__ void clean(int* dev_mem, int width, int height, unsigned char r, unsi
 	dev_mem[blockIdx.y * width + blockIdx.x] = (r << 16) | (g << 8) | b;
 }
 
+__device__ int NormalizePoint() {
+
+}
+
 Device::Device(int height, int width, int* Colors)
 	:
 	dev_width(width),
@@ -108,22 +112,52 @@ void Device::drawPoligon(int x1, int y1, int x2, int y2, int x3, int y3, unsigne
 	int ymin = 0;
 	int ymax = 0;
 
-	if (x1 < x2 && x1 < x3) xmin = x1;
-	if (x2 < x1 && x2 < x3) xmin = x2;
-	if (x3 < x2 && x3 < x1) xmin = x3;
-
-	if (y1 < y2 && y1 < y3)	ymin = y1;
-	if (y2 < y1 && y2 < y3)	ymin = y2;
-	if (y3 < y2 && y3 < y1)	ymin = y3;
-
-	if (x1 > x2 && x1 > x3) xmax = x1;
-	if (x2 > x1 && x2 > x3) xmax = x2;
-	if (x3 > x2 && x3 > x1) xmax = x3;
+	if (x1 <= x2 && x1 <= x3) xmin = x1;
+	if (x2 <= x1 && x2 <= x3) xmin = x2;
+	if (x3 <= x2 && x3 <= x1) xmin = x3;
+						
+	if (y1 <= y2 && y1 <= y3)	ymin = y1;
+	if (y2 <= y1 && y2 <= y3)	ymin = y2;
+	if (y3 <= y2 && y3 <= y1)	ymin = y3;
+						
+	if (x1 >= x2 && x1 >= x3) xmax = x1;
+	if (x2 >= x1 && x2 >= x3) xmax = x2;
+	if (x3 >= x2 && x3 >= x1) xmax = x3;
 							 
-	if (y1 > y2 && y1 > y3)	ymax = y1;
-	if (y2 > y1 && y2 > y3)	ymax = y2;
-	if (y3 > y2 && y3 > y1)	ymax = y3;
+	if (y1 >= y2 && y1 >= y3)	ymax = y1;
+	if (y2 >= y1 && y2 >= y3)	ymax = y2;
+	if (y3 >= y2 && y3 >= y1)	ymax = y3;
 
 	dim3 grid(xmax - xmin, ymax - ymin);
 	renderPoligon << <grid, 1 >> > (dev_mem, xmin, ymin, x1, y1, x2, y2, x3, y3, dev_width, dev_height, r, g, b);
+}
+
+float Device::normalizePointX(float p, float z)
+{
+	if (z!= 0) p /= -z;
+	return dev_width / 2 + dev_height / 2 * p;
+}
+
+float Device::normalizePointY(float p, float z)
+{
+	if (z != 0) p /= -z;
+	return dev_height / 2 + dev_height / 2 * p;
+}
+
+void Device::drawPlane(plane pl, unsigned char r, unsigned char g, unsigned char b)
+{
+	if (pl.p1.z > 0.4 && pl.p3.z > 0.4 && pl.p2.z > 0.4 && pl.p4.z > 0.4) {
+		float x1 = normalizePointX(pl.p1.x, pl.p1.z);
+		float x2 = normalizePointX(pl.p2.x, pl.p2.z);
+		float x3 = normalizePointX(pl.p3.x, pl.p3.z);
+		float x4 = normalizePointX(pl.p4.x, pl.p4.z);
+
+		float y1 = normalizePointY(pl.p1.y, pl.p1.z);
+		float y2 = normalizePointY(pl.p2.y, pl.p2.z);
+		float y3 = normalizePointY(pl.p3.y, pl.p3.z);
+		float y4 = normalizePointY(pl.p4.y, pl.p4.z);
+
+		drawPoligon(x1, y1, x2, y2, x3, y3, r, g, b);
+		drawPoligon(x3, y3, x2, y2, x4, y4, r, g, b);
+	}
 }

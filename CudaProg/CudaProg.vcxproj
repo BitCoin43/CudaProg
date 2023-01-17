@@ -80,10 +80,13 @@
     <CudaCompile Include="DeviceKernel.cu" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="Graphics.cpp" />
+    <ClCompile Include="plane.cpp" />
     <ClCompile Include="Keyboarg.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="Vector.cpp" />
@@ -93,6 +96,8 @@
     <ClInclude Include="DeviceKernel.cuh" />
     <ClInclude Include="Engine.h" />
     <ClInclude Include="Graphics.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="plane.h" />
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Mouse.h" />
@@ -100,6 +105,9 @@
     <ClInclude Include="Vector.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="Winlib.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Текст.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

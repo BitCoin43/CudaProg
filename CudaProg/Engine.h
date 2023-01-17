@@ -6,6 +6,8 @@
 #include <thread>
 #include "DeviceKernel.cuh"
 
+
+
 class Engine
 {
 public:
@@ -30,11 +32,20 @@ private:
 	bool SleepIsGranular = true;
 	float PerfCountFrequency;
 	const float FPSMS = 1.0f / 144.0f;
-	int in = 0;
+	float in = 0;
 
 	float cX = 0;
+	Camera cam;
 private:
 	//Game stuff here
-	int playerx = 0;
+	float playerx = 0;
+	float playery = 0;
+	float playerz = 0;
 
+	float angleX = 0;
+
+	plane pl;
+	plane plan;
+	plane pl2;
+	plane flor;
 };
