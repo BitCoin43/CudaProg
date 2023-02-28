@@ -5,16 +5,61 @@
 
 #include "DeviceKernel.cuh"
 #include <cmath>
+#include <algorithm>
 
-__device__ void DPdev(int* dev_mem, int x, int y, int width, int height, unsigned char r, unsigned char g, unsigned char b) {
+__device__ inline void DPdev(int* dev_mem, int x, int y, int width, int height, unsigned char r, unsigned char g, unsigned char b) {
 	if (x >= 0 && x < width && y >= 0 && y < height) {
 		dev_mem[y * width + x] = (r << 16) | (g << 8) | b;
+	}
+}
+
+__device__ inline void DP_ARGB_dev(int* dev_mem, int x, int y, int width, int height, unsigned char r, unsigned char g, unsigned char b, unsigned char a) {
+	if (x >= 0 && x < width && y >= 0 && y < height){
+			int color = dev_mem[y * width + x];
+
+			float r_b = ((color >> 16) & 0x000000ff) / 255.0;
+			float g_b = ((color << 16 >> 24) & 0x000000ff) / 255.0;
+			float b_b = ((color << 24 >> 24) & 0x000000ff) / 255.0;
+
+			float r_u = r / 255.0;
+			float g_u = g / 255.0;
+			float b_u = b / 255.0;
+
+			float al = a / 255.0;
+
+			unsigned char r_r = (r_u * al + r_b * (1 - al)) * 255;
+			unsigned char g_r = (g_u * al + g_b * (1 - al)) * 255;
+			unsigned char b_r = (b_u * al + b_b * (1 - al)) * 255;
+
+			dev_mem[y * width + x] = (r_r << 16) | (g_r << 8) | b_r;
 	}
 }
 
 __global__ void DPglobal(int* dev_mem, int x, int y, int width, int height, unsigned char r, unsigned char g, unsigned char b) {
 	if (x >= 0 && x < width && y >= 0 && y < height) {
 		dev_mem[y * width + x] = (r << 16) | (g << 8) | b;
+	}
+}
+
+__global__ void DP_ARGB_global(int* dev_mem, int x, int y, int width, int height, unsigned char r, unsigned char g, unsigned char b, unsigned char a) {
+	if (x >= 0 && x < width && y >= 0 && y < height) {
+		int color = dev_mem[y * width + x];
+
+		float r_b = ((color >> 16) & 0x000000ff) / 255.0;
+		float g_b = ((color << 16 >> 24) & 0x000000ff) / 255.0;
+		float b_b = ((color << 24 >> 24) & 0x000000ff) / 255.0;
+
+		float r_u = r / 255.0;
+		float g_u = g / 255.0;
+		float b_u = b / 255.0;
+
+		float al = a / 255.0;
+
+		unsigned char r_r = (r_u * al + r_b * (1 - al)) * 255;
+		unsigned char g_r = (g_u * al + g_b * (1 - al)) * 255;
+		unsigned char b_r = (b_u * al + b_b * (1 - al)) * 255;
+
+		dev_mem[y * width + x] = (r_r << 16) | (g_r << 8) | b_r;
 	}
 }
 
@@ -26,8 +71,7 @@ __global__ void renderCircle(int* dev_mem, int x1, int y1, int R, int width, int
 	}
 }
 
-__global__ void renderLine(int* dev_mem, const int width, const int height, const float x0, const float y0, const float x1, const float y1, unsigned char r, unsigned char g, unsigned char b
-)
+__global__ void renderLine(int* dev_mem, const int width, const int height, const float x0, const float y0, const float x1, const float y1, unsigned char r, unsigned char g, unsigned char b)
 {
     int x = blockIdx.x; int y = blockIdx.y;
 
@@ -56,12 +100,21 @@ __global__ void renderPoligon(int* dev_mem, int xmin, int ymin, int x1, int y1, 
 	}
 }
 
+__global__ void renderRect_dev(int* dev_mem, int xmin, int ymin, int width, int height, unsigned char r, unsigned char g, unsigned char b, unsigned char a) {
+	int x = blockIdx.x + xmin; int y = blockIdx.y + ymin;
+	DP_ARGB_dev(dev_mem, x, y, width, height, r, g, b, a);
+}
+
 __global__ void clean(int* dev_mem, int width, int height, unsigned char r, unsigned char g, unsigned char b) {
 	dev_mem[blockIdx.y * width + blockIdx.x] = (r << 16) | (g << 8) | b;
 }
 
 __device__ int NormalizePoint() {
 
+}
+
+__global__ void getInt_dev(int* dev_mem, int *c, int width, int x, int y) {
+	*c = dev_mem[y * width + x];
 }
 
 Device::Device(int height, int width, int* Colors)
@@ -132,6 +185,12 @@ void Device::drawPoligon(int x1, int y1, int x2, int y2, int x3, int y3, unsigne
 	renderPoligon << <grid, 1 >> > (dev_mem, xmin, ymin, x1, y1, x2, y2, x3, y3, dev_width, dev_height, r, g, b);
 }
 
+void Device::drawRect(int x1, int x2, int y1, int y2, unsigned char r, unsigned char g, unsigned char b, unsigned char a)
+{
+	dim3 grid(x2 - x1, y2 - y1);
+	renderRect_dev<<<grid, 1>>>(dev_mem, x1, y1, dev_width, dev_height, r, g, b, a);
+}
+
 float Device::normalizePointX(float p, float z)
 {
 	if (z!= 0) p /= -z;
@@ -160,4 +219,59 @@ void Device::drawPlane(plane pl, unsigned char r, unsigned char g, unsigned char
 		drawPoligon(x1, y1, x2, y2, x3, y3, r, g, b);
 		drawPoligon(x3, y3, x2, y2, x4, y4, r, g, b);
 	}
+}
+
+void Device::drawMap(Map map, Camera cam)
+{
+	Matrix p(translate(cam.pos));
+	Matrix m = rotateZ(180);
+	Matrix l = rotateY(cam.angleX);
+	Matrix k = rotateX(cam.angleY);
+	m *= l;
+	m *= p;
+
+	plane mpl [3];
+
+	for (int i = 0; i < 3; i++) {
+		mpl[i] = plane(
+			multyply(map.pl[i].p1, m),
+			multyply(map.pl[i].p2, m),
+			multyply(map.pl[i].p3, m),
+			multyply(map.pl[i].p4, m), map.pl[i].r, map.pl[i].g, map.pl[i].b);
+	}
+
+	float f1[3] = {};
+	for (int i = 0; i < 3; i++) {
+		f1[i] = (mpl[i].p1.z + mpl[i].p2.z + mpl[i].p3.z + mpl[i].p4.z) / 4;
+	}
+
+	float f2[3] = { f1[0], f1[1], f1[2]};
+	std::sort(std::begin(f2), std::end(f2), std::greater<>());
+
+
+	int f3[3] = {};
+	for (int i = 0; i < 3; i++) {
+		float count = 0;
+		for (int j = 0; j < 4; j++) {
+			if (f2[j] == f1[i]) {
+				count = j;
+			}
+		}
+		f3[i] = count;
+	}
+
+	for (int i = 0; i < 3; i++) {
+		drawPlane(mpl[f3[i]], mpl[f3[i]].r, mpl[f3[i]].g, mpl[f3[i]].b);
+	}
+}
+
+int Device::getInt(int x, int y)
+{
+	int *dev_c;
+	int c;
+	cudaMalloc((void**)&dev_c, sizeof(int));
+	getInt_dev << <1, 1 >> > (dev_mem, dev_c, dev_width, x, y);
+	cudaMemcpy(&c, dev_c, sizeof(int), cudaMemcpyDeviceToHost);
+	cudaFree(dev_c);
+	return c;
 }

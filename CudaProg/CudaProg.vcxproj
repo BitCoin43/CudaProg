@@ -83,6 +83,7 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="Graphics.cpp" />
+    <ClCompile Include="Map.cpp" />
     <ClCompile Include="plane.cpp" />
     <ClCompile Include="Keyboarg.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -97,6 +98,7 @@
     <ClInclude Include="Engine.h" />
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Map.h" />
     <ClInclude Include="plane.h" />
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="Matrix.h" />

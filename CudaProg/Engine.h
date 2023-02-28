@@ -4,9 +4,8 @@
 #include "Timer.h"
 #include <string>
 #include <thread>
+#include "Map.h"
 #include "DeviceKernel.cuh"
-
-
 
 class Engine
 {
@@ -36,6 +35,7 @@ private:
 
 	float cX = 0;
 	Camera cam;
+	Map map;
 private:
 	//Game stuff here
 	float playerx = 0;
@@ -43,9 +43,4 @@ private:
 	float playerz = 0;
 
 	float angleX = 0;
-
-	plane pl;
-	plane plan;
-	plane pl2;
-	plane flor;
 };

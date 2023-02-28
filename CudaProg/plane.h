@@ -4,6 +4,7 @@
 
 class plane {
 public:
+	plane();
 	plane(Vector3D p1, Vector3D p2, Vector3D p3, Vector3D p4, unsigned char r, unsigned char g, unsigned char b);
 	~plane();
 	plane getPlane(float angle, Camera cam);

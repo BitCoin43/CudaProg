@@ -3,11 +3,7 @@
 Engine::Engine(Window& wnd)
 	:
 	gfx(wnd.GetWindowWidth(), wnd.GetWindowHeight()),
-	dev(wnd.GetWindowHeight(), wnd.GetWindowWidth(), wnd.GetColorBuffer()),
-	pl(Vector3D(-0.5, 0.5, 0), Vector3D(0.5, 0.5, 0), Vector3D(-0.5, -0.5, 0), Vector3D(0.5, -0.5, 0), 255, 200, 2),
-	plan(Vector3D(-0.5, 0.5, 0), Vector3D(-0.5, 0.5, 1), Vector3D(-0.5, -0.5, 0), Vector3D(-0.5, -0.5, 1), 255, 200, 2),
-	pl2(Vector3D(-0.5, -0.5, 1), Vector3D(0.5, -0.5, 1), Vector3D(-0.5, -0.5, 0), Vector3D(0.5, -0.5, 0), 255, 200, 2),
-	flor(Vector3D(-3, 3, 1), Vector3D(3, 3, 1), Vector3D(-3, -3, 1), Vector3D(3, -3, 1), 255, 200, 2)
+	dev(wnd.GetWindowHeight(), wnd.GetWindowWidth(), wnd.GetColorBuffer())
 {
 	Colors = wnd.GetColorBuffer();
 	QueryPerformanceFrequency(&PerfCountFrequecyResult);
@@ -65,9 +61,9 @@ void Engine::Update(Window& wnd)
 
 	if (wnd.kbd.KeyIsPressed('W'))	cam.pos -= multiple(normalize(cam.getDirection()), 0.02);
 
-	if (wnd.kbd.KeyIsPressed('Z'))  cam.angleX += 2;
+	if (wnd.kbd.KeyIsPressed('Z'))  cam.angleX -= 2;
 
-	if (wnd.kbd.KeyIsPressed('C'))	cam.angleX -= 2;
+	if (wnd.kbd.KeyIsPressed('C'))	cam.angleX += 2;
 }
 
 LARGE_INTEGER Engine::EngineGetWallClock() const
@@ -85,24 +81,29 @@ float Engine::EngineGetSecondsElapsed(LARGE_INTEGER Start, LARGE_INTEGER End) co
 
 void Engine::ComposeFrame()
 {
+	//gfx.ClearScreenSuperFast(Colors);
+	//map.renderScene(dev, cam);
+	dev.drawMap(map, cam);
 
-	
-	
-	dev.drawPlane(pl2.getPlane(in, cam), 10, 10, 200);
-	dev.drawPlane(pl.getPlane(in, cam), 200, 10, 10);
-	dev.drawPlane(plan.getPlane(in, cam), 10, 200, 10);
 	//dev.drawPlane(flor.getPlane(90, cam), 60, 60, 60);
 	
-	Vector3D v = cam.getDirection();
+	//Vector3D v = cam.getDirection();
 
 	dev.drawPixel(in, 0, 255, 255, 255);
 	dev.drawPixel(144, 1, 255, 255, 255);
 	dev.drawPixel(540, 360, 255, 255, 255);
 	
 	in += 1;
-	if (in > 144) in = 0;
+	if (in > 255) in = 0;
 
 	//*********************************************************************************
 	dev.copyDeviceToHost(*Colors);
 	dev.cleanDeviceMem(30, 30, 30);
+	//*********************************************************************************
+	
+	
+
+
+	//gfx.DrawAlphaRectangle(Colors, 100, 300, 100, 300, 0, 255, 0, in);
+	
 }

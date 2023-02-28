@@ -42,6 +42,7 @@
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="plane.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Map.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine.h">
@@ -72,6 +73,7 @@
     <ClInclude Include="Vector.h" />
     <ClInclude Include="plane.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Map.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Текст.txt" />

@@ -1,6 +1,18 @@
 #include "plane.h"
 
 
+plane::plane()
+	:
+	p1(Vector3D(0, 0, 0)),
+	p2(Vector3D(0, 0, 0)),
+	p3(Vector3D(0, 0, 0)),
+	p4(Vector3D(0, 0, 0)),
+	r(0),
+	g(0),
+	b(0)
+{
+}
+
 plane::plane(Vector3D p1, Vector3D p2, Vector3D p3, Vector3D p4, unsigned char r, unsigned char g, unsigned char b)
 	:
 	p1(p1),
