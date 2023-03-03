@@ -43,6 +43,9 @@
     <ClCompile Include="plane.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Map.cpp" />
+    <ClCompile Include="StaticMesh.cpp" />
+    <ClCompile Include="Object.cpp" />
+    <ClCompile Include="Polygon.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine.h">
@@ -74,6 +77,9 @@
     <ClInclude Include="plane.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Map.h" />
+    <ClInclude Include="Object.h" />
+    <ClInclude Include="StaticMesh.h" />
+    <ClInclude Include="Polygon.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Текст.txt" />

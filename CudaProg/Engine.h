@@ -31,7 +31,7 @@ private:
 	bool SleepIsGranular = true;
 	float PerfCountFrequency;
 	const float FPSMS = 1.0f / 144.0f;
-	float in = 0;
+	float tick = 0;
 
 	float cX = 0;
 	Camera cam;

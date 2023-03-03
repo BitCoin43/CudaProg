@@ -9,7 +9,19 @@ Engine::Engine(Window& wnd)
 	QueryPerformanceFrequency(&PerfCountFrequecyResult);
 	PerfCountFrequency = (float)(PerfCountFrequecyResult.QuadPart);
 	//SleepIsGranular = (timeBeginPeriod(1) == TIMERR_NOERROR);
-	SetWindowTextA(wnd.GetCustomWindow(), "Winframework");
+	SetWindowTextA(wnd.GetCustomWindow(), "Ray-Tracing");
+
+	polygon p1(Vector3D(-1, 2, -1), Vector3D(-1, 2, 1), Vector3D(1, 2, 1));
+	polygon p2(Vector3D(-1, 2, -1), Vector3D(1, 2, -1), Vector3D(1, 2, 1));
+	polygon p3(Vector3D(-1, 2, -1), Vector3D(1, 0, -1), Vector3D(-1, 0, -1));
+	polygon p4(Vector3D(-1, 2, -1), Vector3D(1, 0, -1), Vector3D(1, 2, -1));
+	polygon p5(Vector3D(1, 0, -1), Vector3D(1, 2, 1), Vector3D(1, 2, -1));
+	polygon p6(Vector3D(1, 0, -1), Vector3D(1, 2, 1), Vector3D(1, 0, 1));
+	
+	polygon* polygons = { new polygon[6] {p1, p2, p3, p4, p5, p6}};
+	StaticMesh* mesh = new StaticMesh(polygons, 6);
+	Object* obj = { new Object[1] {Object(Vector3D(0, 0, 4), Vector3D(0, 0, 0), mesh)} };
+	map.object = obj;
 }
 
 Engine::~Engine()
@@ -40,6 +52,8 @@ void Engine::Run(Window& wnd)
 
 	cX = 1.0f / SecondsElapsedForFrame;
 	Update(wnd);
+	tick += 1;
+	if (tick > 144) tick = 0;
 	ComposeFrame();
 
 	LARGE_INTEGER EndCounter = EngineGetWallClock();
@@ -49,17 +63,17 @@ void Engine::Run(Window& wnd)
 void Engine::Update(Window& wnd)
 {
 
-	if (wnd.kbd.KeyIsPressed('D'))	cam.pos -= multiple(crossProduct(normalize(cam.getDirection()), cam.up) , 0.02);
+	if (wnd.kbd.KeyIsPressed('D'))	cam.pos -= multiple(crossProduct(normalize(cam.getDirection()), cam.up) , 0.04);
 	
-	if (wnd.kbd.KeyIsPressed('A'))	cam.pos += multiple(crossProduct(normalize(cam.getDirection()), cam.up), 0.02);
+	if (wnd.kbd.KeyIsPressed('A'))	cam.pos += multiple(crossProduct(normalize(cam.getDirection()), cam.up), 0.04);
 
 	if (wnd.kbd.KeyIsPressed('F'))	cam.pos.y -= 0.02;
 
 	if (wnd.kbd.KeyIsPressed('R'))	cam.pos.y += 0.02;
 
-	if (wnd.kbd.KeyIsPressed('S'))	cam.pos += multiple(normalize(cam.getDirection()), 0.02);
+	if (wnd.kbd.KeyIsPressed('S'))	cam.pos += multiple(normalize(cam.getDirection()), 0.04);
 
-	if (wnd.kbd.KeyIsPressed('W'))	cam.pos -= multiple(normalize(cam.getDirection()), 0.02);
+	if (wnd.kbd.KeyIsPressed('W'))	cam.pos -= multiple(normalize(cam.getDirection()), 0.04);
 
 	if (wnd.kbd.KeyIsPressed('Z'))  cam.angleX -= 2;
 
@@ -81,29 +95,21 @@ float Engine::EngineGetSecondsElapsed(LARGE_INTEGER Start, LARGE_INTEGER End) co
 
 void Engine::ComposeFrame()
 {
-	//gfx.ClearScreenSuperFast(Colors);
-	//map.renderScene(dev, cam);
-	dev.drawMap(map, cam);
+	//dev.drawMap(map, cam);
 
-	//dev.drawPlane(flor.getPlane(90, cam), 60, 60, 60);
+	dev.ray_render(map, cam);
 	
 	//Vector3D v = cam.getDirection();
 
-	dev.drawPixel(in, 0, 255, 255, 255);
+	dev.drawPixel(tick, 0, 255, 255, 255);
 	dev.drawPixel(144, 1, 255, 255, 255);
 	dev.drawPixel(540, 360, 255, 255, 255);
-	
-	in += 1;
-	if (in > 255) in = 0;
 
 	//*********************************************************************************
 	dev.copyDeviceToHost(*Colors);
 	dev.cleanDeviceMem(30, 30, 30);
 	//*********************************************************************************
 	
-	
-
-
 	//gfx.DrawAlphaRectangle(Colors, 100, 300, 100, 300, 0, 255, 0, in);
 	
 }

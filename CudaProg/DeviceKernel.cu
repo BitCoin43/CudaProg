@@ -117,6 +117,14 @@ __global__ void getInt_dev(int* dev_mem, int *c, int width, int x, int y) {
 	*c = dev_mem[y * width + x];
 }
 
+__global__ void ray_tracing(int* dev_mem, int width, int height, polygon* poly) {
+	int x = threadIdx.x + blockIdx.x * blockDim.x;
+	int y = threadIdx.y + blockIdx.y * blockDim.y;
+	if (x <= width && y <= height) {
+		DP_ARGB_dev(dev_mem, x, y, width, height, 0, 0, 255, 100);
+	}
+}
+
 Device::Device(int height, int width, int* Colors)
 	:
 	dev_width(width),
@@ -193,13 +201,13 @@ void Device::drawRect(int x1, int x2, int y1, int y2, unsigned char r, unsigned 
 
 float Device::normalizePointX(float p, float z)
 {
-	if (z!= 0) p /= -z;
+	if (z != 0) p /= -(z * 0.5);
 	return dev_width / 2 + dev_height / 2 * p;
 }
 
 float Device::normalizePointY(float p, float z)
 {
-	if (z != 0) p /= -z;
+	if (z != 0) p /= (-z * 0.5);
 	return dev_height / 2 + dev_height / 2 * p;
 }
 
@@ -265,13 +273,67 @@ void Device::drawMap(Map map, Camera cam)
 	}
 }
 
-int Device::getInt(int x, int y)
+void Device::drawMap_p(Map map, Camera cam)
 {
-	int *dev_c;
-	int c;
-	cudaMalloc((void**)&dev_c, sizeof(int));
-	getInt_dev << <1, 1 >> > (dev_mem, dev_c, dev_width, x, y);
-	cudaMemcpy(&c, dev_c, sizeof(int), cudaMemcpyDeviceToHost);
-	cudaFree(dev_c);
-	return c;
+
 }
+
+void Device::ray_render(Map map, Camera cam)
+{
+	polygon* polygons = { new polygon[map.count_of_all_polygons] {} };
+
+	Matrix hp(translate(cam.pos));
+	Matrix m = rotateZ(180);
+	Matrix l = rotateY(cam.angleX);
+	Matrix k = rotateX(cam.angleY);
+	m *= l;
+	m *= hp;
+
+	int coo = map.count_of_objects;
+
+	for (int i = 0; i < coo; i++) {
+		Object b = *(map.object + i);
+		int cofp = b.mesh->count_of_polygons;
+		for (int j = 0; j < cofp; j++) {
+			polygon p = b.mesh->polygons[j];
+			for (int k = 0; k < 3; k++) {
+				p.facets[k] += b.position;
+				p.facets[k] = multyply(p.facets[k], m);
+			}
+			polygons[(i * b.mesh->count_of_polygons) + j] = p;
+		}
+	}
+
+	polygon* end_poly = nullptr;
+
+	cudaMalloc((void**)&end_poly, sizeof(polygon) * map.count_of_all_polygons);
+
+	for (int i = 0; i < map.count_of_all_polygons; i++) {
+		polygon p = *(polygons + i);
+
+		polygon p2 = *(polygons + 0);
+		polygon p3 = *(polygons + 1);
+
+		float x1 = normalizePointX(p.facets[0].x, p.facets[0].z);
+		float x2 = normalizePointX(p.facets[1].x, p.facets[1].z);
+		float x3 = normalizePointX(p.facets[2].x, p.facets[2].z);
+								   
+		float y1 = normalizePointY(p.facets[0].y, p.facets[0].z);
+		float y2 = normalizePointY(p.facets[1].y, p.facets[1].z);
+		float y3 = normalizePointY(p.facets[2].y, p.facets[2].z);
+
+
+		drawPoligon(x1, y1, x2, y2, x3, y3, 255, 90, 250);
+	}
+
+	int w = dev_width / 32;
+	int h = dev_height / 32;
+	if (dev_width % 32 != 0) w++;
+	if (dev_height % 32 != 0) h++;
+
+	dim3 blocks(w, h);
+	dim3 theads(32, 32);
+
+	ray_tracing<<<blocks, theads>>>(dev_mem, dev_width, dev_height, end_poly);
+}
+

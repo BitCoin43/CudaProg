@@ -16,7 +16,8 @@ public:
 	float normalizePointY(float p, float z);
 	void drawPlane(plane pl, unsigned char r, unsigned char g, unsigned char b);
 	void drawMap(Map map, Camera cam);
-	int getInt(int x, int y);
+	void drawMap_p(Map map, Camera cam);
+	void ray_render(Map map, Camera cam);
 private:
 	int* dev_mem;
 	int dev_height;
