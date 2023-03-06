@@ -13,6 +13,12 @@ __device__ inline void DPdev(int* dev_mem, int x, int y, int width, int height, 
 	}
 }
 
+__device__ inline void DPdev(int* dev_mem, int x, int y, int width, int height, int color) {
+	if (x >= 0 && x < width && y >= 0 && y < height) {
+		dev_mem[y * width + x] = color;
+	}
+}
+
 __device__ inline void DP_ARGB_dev(int* dev_mem, int x, int y, int width, int height, unsigned char r, unsigned char g, unsigned char b, unsigned char a) {
 	if (x >= 0 && x < width && y >= 0 && y < height){
 			int color = dev_mem[y * width + x];
@@ -117,11 +123,195 @@ __global__ void getInt_dev(int* dev_mem, int *c, int width, int x, int y) {
 	*c = dev_mem[y * width + x];
 }
 
-__global__ void ray_tracing(int* dev_mem, int width, int height, polygon* poly) {
+/*__device__ inline Vector3D cross(Vector3D origin, Vector3D direction, polygon poly) {
+	Vector3D E1 = poly.facets[1]; E1 -= poly.facets[0];
+	Vector3D E2 = poly.facets[2]; E2 -= poly.facets[0];
+	Vector3D T = origin; T -= poly.facets[0];
+	Vector3D P = crossProduct(direction, E2);
+	Vector3D Q = crossProduct(T, E1);
+	float t = (1 / dot(P, E1)) * dot(Q, E2);
+	float u = (1 / dot(P, E1)) * dot(P, T);
+	float v = (1 / dot(P, E1)) * dot(Q, direction);
+	Vector3D r = addVector3D(multiple(poly.facets[1], (1 - u - v)), addVector3D(multiple(poly.facets[2], u), multiple(poly.facets[0], v)));
+	return r;
+}*/
+
+__device__ inline float squarOfTriangle(float a, float b, float c) {
+	float p = (a + b + c) / 2;
+	return sqrt(p * (p - a) * (p - b) * (p - c));
+}
+
+__device__ bool in_t(float3 p, float3 poly[3]) {
+	if (p.x == 0 && p.y == 0 && p.z == 0) {
+		return false;
+	}
+	bool inside = false;
+	float AB = sqrt((poly[0].x - poly[1].x) * (poly[0].x - poly[1].x) + (poly[0].y - poly[1].y) * (poly[0].y - 
+				     poly[1].y) + (poly[0].z - poly[1].z) * (poly[0].z - poly[1].z));
+	float BC = sqrt((poly[1].x - poly[2].x) * (poly[1].x - poly[2].x) + (poly[1].y - poly[2].y) * (poly[1].y - 
+				     poly[2].y) + (poly[1].z - poly[2].z) * (poly[1].z - poly[2].z));
+	float CA = sqrt((poly[0].x - poly[2].x) * (poly[0].x - poly[2].x) + (poly[0].y - poly[2].y) * (poly[0].y - 
+				     poly[2].y) + (poly[0].z - poly[2].z) * (poly[0].z - poly[2].z));
+
+	float AP = sqrt((p.x - poly[0].x) * (p.x - poly[0].x) + (p.y - poly[0].y) * (p.y - poly[0].y) + (p.z - poly[0].z) * (p.z - poly[0].z));
+	float BP = sqrt((p.x - poly[1].x) * (p.x - poly[1].x) + (p.y - poly[1].y) * (p.y - poly[1].y) + (p.z - poly[1].z) * (p.z - poly[1].z));
+	float CP = sqrt((p.x - poly[2].x) * (p.x - poly[2].x) + (p.y - poly[2].y) * (p.y - poly[2].y) + (p.z - poly[2].z) * (p.z - poly[2].z));
+	float diff = (squarOfTriangle(AP, BP, AB) + squarOfTriangle(AP, CP, CA) + squarOfTriangle(BP, CP, BC)) - squarOfTriangle(AB, BC, CA);
+	if (fabs(diff) < 0.001) inside = true;
+	return inside;
+
+}
+
+__device__ inline float3 MIN_f3(float3& f1, float3& f2) {
+	return make_float3(f1.x - f2.x, f1.y - f2.y, f1.z - f2.z);
+}
+
+__device__ inline float3 ADD_f3(float3& f1, float3& f2) {
+	return make_float3(f1.x + f2.x, f1.y + f2.y, f1.z + f2.z);
+}
+
+__device__ inline float3 MLT_f3(float3& f, float s) {
+	return make_float3(f.x * s, f.y * s, f.z * s);
+}
+
+__device__ bool EQV(float3& f1, float3& f2) {
+	return f1.x == f2.x && f1.y == f2.y && f1.z == f2.z;
+}
+
+__device__ bool fabs_f3(float3& f1, float3& f2,const float& s) {
+	float x = f1.x - f2.x;	if (x < 0) x *= -1;
+	float y = f1.y - f2.y;	if (y < 0) y *= -1;
+	float z = f1.z - f2.z;	if (z < 0) z *= -1;
+	return x < s&& y < s&& z < s;
+}
+
+__device__ float3 crossProduct_f3(float3& v1, float3& v2) {
+	return make_float3(
+		v1.y * v2.z - v1.z * v2.y,
+		v1.z * v2.x - v1.x * v2.z,
+		v1.x * v2.y - v1.y * v2.x);
+}
+
+__device__ float dot_f3(float3& v1, float3& v2) {
+	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+}
+
+__device__ float rayTriangleIntersect(float3& origin,float3& direction,float3& p0,float3& p1,float3& p2,float minT) {
+	const float kNoIntersection = FLT_MAX;
+
+	float3 e1 = MIN_f3(p1, p0);
+	float3 e2 = MIN_f3(p2, p1);
+	float3 n = crossProduct_f3(e1, e2);
+	float dot = dot_f3(n, direction);
+
+	if(!(dot < 0.0f)) return kNoIntersection;
+
+	float d = dot_f3(n, p0);
+	float t = d - dot_f3(n, origin);
+
+	if(!(t<= 0.0f)) return kNoIntersection;
+	if(!(t >= dot * minT)) return kNoIntersection;
+	
+	t /= dot;
+	float3 p = ADD_f3(origin, MLT_f3(direction, t));
+
+	float u0, u1, u2;
+	float v0, v1, v2;
+	if (fabs(n.x) > fabs(n.y)) {
+		if (fabs(n.x) > fabs(n.z)) {
+			u0 = p.y - p0.y;
+			u1 = p1.y - p0.y;
+			u2 = p2.y - p0.y;
+			v0 = p.z - p0.z;
+			v1 = p1.z - p0.z;
+			v2 = p2.z - p0.z;
+		}
+		else {
+			u0 = p.x - p0.x;
+			u1 = p1.x - p0.x;
+			u2 = p2.x - p0.x;
+			v0 = p.y - p0.y;
+			v1 = p1.y - p0.y;
+			v2 = p2.y - p0.y;
+		}
+	}
+	else {
+		if (fabs(n.y) > fabs(n.z)) {
+			u0 = p.x - p0.x;
+			u1 = p1.x - p0.x;
+			u2 = p2.x - p0.x;
+			v0 = p.z -p0.z;
+			v1 = p1.z - p0.z;
+			v2 = p2.z - p0.z;
+		}			  
+		else {		  
+			u0 = p.x - p0.x;
+			u1 = p1.x - p0.x;
+			u2 = p2.x - p0.x;
+			v0 = p.y - p0.y;
+			v1 = p1.y - p0.y;
+			v2 = p2.y - p0.y;
+		}
+	}
+	float temp = u1 * v2 - v1 * u2;
+	if (!(temp != 0.0f)) {
+		return kNoIntersection;
+	} 
+	temp = 1.0f / temp;
+
+	float alpha = (u0 * v2 - v0 * u2) * temp;
+	if (!(alpha >= 0.0f))	return kNoIntersection;
+	float beta = (u1 * v0 - v1 * u0) * temp;
+	if (!(beta >= 0.0f))	return kNoIntersection;
+	float gamma = 1.0f - alpha - beta;
+	if (!(gamma >= 0.0f)) 	return kNoIntersection;
+
+	return t;
+ } 
+
+__device__ inline float4 cross(float3 origin, float3 dir, float3 poly[3]) {
+	float3 E1 = MIN_f3(poly[1], poly[0]);
+	float3 E2 = MIN_f3(poly[2], poly[0]);
+	float3 T  = MIN_f3(origin, poly[0]);
+	float3 P = crossProduct_f3(dir, E2);
+	float3 Q = crossProduct_f3(T, E1);
+	float t = (1 / dot_f3(P, E1)) * dot_f3(Q, E2);
+	float u = (1 / dot_f3(P, E1)) * dot_f3(P, T);
+	float v = (1 / dot_f3(P, E1)) * dot_f3(Q, dir);
+	float3 r = ADD_f3(MLT_f3(poly[1], (1 - u - v)), ADD_f3(MLT_f3(poly[2], u), MLT_f3(poly[0], v)));
+	float3 l = ADD_f3(origin, MLT_f3(dir, t));
+	if (fabs_f3(r, l, FLT_MAX)){
+		return make_float4(r.x, r.y, r.z, t);
+	}
+	return make_float4(0, 0, 0, 0);
+}
+
+__global__ void ray_tracing(int* dev_mem, int width, int height, float3* poly, int* colors, int countOfAllPolygons) {
 	int x = threadIdx.x + blockIdx.x * blockDim.x;
 	int y = threadIdx.y + blockIdx.y * blockDim.y;
 	if (x <= width && y <= height) {
-		DP_ARGB_dev(dev_mem, x, y, width, height, 0, 0, 255, 100);
+		
+		float s = FLT_MAX;
+		int color_index = 0;
+		bool is = false;
+		float3 dir = make_float3(x - width / 2, y - height / 2, width * 1.0);
+		for (int i = 0; i < countOfAllPolygons; i++) {
+			float3 polygon[3] = { poly[i * 3], poly[i * 3 + 1], poly[i * 3 + 2] };
+			//float4 p = cross(make_float3(0, 0, 0), dir, polygon);
+			float p = rayTriangleIntersect(make_float3(0, 0, 0), dir, polygon[0], polygon[1], polygon[2], 10);
+			if (p != FLT_MAX) {
+				if (p < s) {
+					s = p;
+					color_index = i;
+					is = true;
+				}
+				
+			}
+		}
+		if (is) {
+			DPdev(dev_mem, x, y, width, height, colors[color_index]);
+		}
+		//DP_ARGB_dev(dev_mem, x, y, width, height, 0, 0, 255, 100);
 	}
 }
 
@@ -229,104 +419,65 @@ void Device::drawPlane(plane pl, unsigned char r, unsigned char g, unsigned char
 	}
 }
 
-void Device::drawMap(Map map, Camera cam)
-{
-	Matrix p(translate(cam.pos));
-	Matrix m = rotateZ(180);
-	Matrix l = rotateY(cam.angleX);
-	Matrix k = rotateX(cam.angleY);
-	m *= l;
-	m *= p;
-
-	plane mpl [3];
-
-	for (int i = 0; i < 3; i++) {
-		mpl[i] = plane(
-			multyply(map.pl[i].p1, m),
-			multyply(map.pl[i].p2, m),
-			multyply(map.pl[i].p3, m),
-			multyply(map.pl[i].p4, m), map.pl[i].r, map.pl[i].g, map.pl[i].b);
-	}
-
-	float f1[3] = {};
-	for (int i = 0; i < 3; i++) {
-		f1[i] = (mpl[i].p1.z + mpl[i].p2.z + mpl[i].p3.z + mpl[i].p4.z) / 4;
-	}
-
-	float f2[3] = { f1[0], f1[1], f1[2]};
-	std::sort(std::begin(f2), std::end(f2), std::greater<>());
-
-
-	int f3[3] = {};
-	for (int i = 0; i < 3; i++) {
-		float count = 0;
-		for (int j = 0; j < 4; j++) {
-			if (f2[j] == f1[i]) {
-				count = j;
-			}
-		}
-		f3[i] = count;
-	}
-
-	for (int i = 0; i < 3; i++) {
-		drawPlane(mpl[f3[i]], mpl[f3[i]].r, mpl[f3[i]].g, mpl[f3[i]].b);
-	}
-}
-
 void Device::drawMap_p(Map map, Camera cam)
 {
 
 }
 
-void Device::ray_render(Map map, Camera cam)
+void Device::ray_render(Map& map, Camera& cam)
 {
 	polygon* polygons = { new polygon[map.count_of_all_polygons] {} };
+	int* colors = { new int[map.count_of_all_polygons] {} };
+	
 
 	Matrix hp(translate(cam.pos));
 	Matrix m = rotateZ(180);
 	Matrix l = rotateY(cam.angleX);
 	Matrix k = rotateX(cam.angleY);
+	m *= k;
 	m *= l;
 	m *= hp;
 
 	int coo = map.count_of_objects;
 
+	int counter = 0;
 	for (int i = 0; i < coo; i++) {
 		Object b = *(map.object + i);
 		int cofp = b.mesh->count_of_polygons;
 		for (int j = 0; j < cofp; j++) {
 			polygon p = b.mesh->polygons[j];
+			int color = b.mesh->colors_of_polygons[j];
 			for (int k = 0; k < 3; k++) {
 				p.facets[k] += b.position;
 				p.facets[k] = multyply(p.facets[k], m);
 			}
-			polygons[(i * b.mesh->count_of_polygons) + j] = p;
+			polygons[counter] = p;
+			colors[counter] = color;
+			counter++;
+
 		}
 	}
 
-	polygon* end_poly = nullptr;
-
-	cudaMalloc((void**)&end_poly, sizeof(polygon) * map.count_of_all_polygons);
+	float3* host_end_poly = { new float3[3 * map.count_of_all_polygons] {} };
+	float3* dev_end_poly = nullptr;
 
 	for (int i = 0; i < map.count_of_all_polygons; i++) {
-		polygon p = *(polygons + i);
-
-		polygon p2 = *(polygons + 0);
-		polygon p3 = *(polygons + 1);
-
-		float x1 = normalizePointX(p.facets[0].x, p.facets[0].z);
-		float x2 = normalizePointX(p.facets[1].x, p.facets[1].z);
-		float x3 = normalizePointX(p.facets[2].x, p.facets[2].z);
-								   
-		float y1 = normalizePointY(p.facets[0].y, p.facets[0].z);
-		float y2 = normalizePointY(p.facets[1].y, p.facets[1].z);
-		float y3 = normalizePointY(p.facets[2].y, p.facets[2].z);
-
-
-		drawPoligon(x1, y1, x2, y2, x3, y3, 255, 90, 250);
+		polygon p = polygons[i];
+		host_end_poly[i * 3 + 0] = make_float3(p.facets[0].x, p.facets[0].y, p.facets[0].z);
+		host_end_poly[i * 3 + 1] = make_float3(p.facets[1].x, p.facets[1].y, p.facets[1].z);
+		host_end_poly[i * 3 + 2] = make_float3(p.facets[2].x, p.facets[2].y, p.facets[2].z);
 	}
+	
 
-	int w = dev_width / 32;
+	cudaMalloc((void**)&dev_end_poly, sizeof(float3) * 3 * map.count_of_all_polygons);
+	cudaMemcpy(dev_end_poly, host_end_poly, sizeof(float3) * 3 * map.count_of_all_polygons, cudaMemcpyHostToDevice);
+
+	int* dev_colors = nullptr;
+
+	cudaMalloc((void**)&dev_colors, sizeof(int) * map.count_of_all_polygons);
+	cudaMemcpy(dev_colors, colors, sizeof(int) * map.count_of_all_polygons, cudaMemcpyHostToDevice);
+
+	int w = 1080 / 32;
 	int h = dev_height / 32;
 	if (dev_width % 32 != 0) w++;
 	if (dev_height % 32 != 0) h++;
@@ -334,6 +485,11 @@ void Device::ray_render(Map map, Camera cam)
 	dim3 blocks(w, h);
 	dim3 theads(32, 32);
 
-	ray_tracing<<<blocks, theads>>>(dev_mem, dev_width, dev_height, end_poly);
+	ray_tracing<<<blocks, theads>>>(dev_mem, dev_width, dev_height, dev_end_poly, dev_colors, map.count_of_all_polygons);
+	cudaFree(dev_end_poly);
+	cudaFree(dev_colors);
+	delete host_end_poly;
+	delete polygons;
+	delete colors;
 }
 

@@ -4,12 +4,12 @@
 
 class Map {
 public:
-	Map(Object* obj);
+	Map(Object* obj, int countOfPolygons);
 	Map();
-	plane pl[3];
+	~Map();
 
 	Object* object;
-	int count_of_objects = 1;
-	int count_of_all_polygons = 6;
+	int count_of_objects = 2;
+	int count_of_all_polygons = 8;
 	//void renderScene(Device dev, Camera cam);
 };

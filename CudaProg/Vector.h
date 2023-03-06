@@ -30,3 +30,10 @@ Vector3D subtraction(const Vector3D& v, const Vector3D& k);
 Vector3D normalize(const Vector3D& v);
 
 Vector3D multiple(Vector3D v, float f);
+
+Vector3D addVector3D(Vector3D v1, Vector3D v2);
+
+float dot(Vector3D v1, Vector3D v2);
+
+
+

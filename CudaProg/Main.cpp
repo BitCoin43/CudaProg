@@ -10,6 +10,7 @@ int WINAPI WinMain(
 	Window wnd(1080, 720, hInst);
 
 	Engine engine(wnd);
+	
 
 	while (wnd.RunMessageLoop()) {
 

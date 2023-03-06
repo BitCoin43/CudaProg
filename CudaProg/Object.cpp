@@ -7,3 +7,8 @@ Object::Object(Vector3D position, Vector3D rotation, StaticMesh* mesh)
 	mesh(mesh)
 {
 }
+
+Object::~Object()
+{
+	//delete mesh;
+}

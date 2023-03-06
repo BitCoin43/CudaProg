@@ -136,3 +136,13 @@ Vector3D multiple(Vector3D v, float f)
 	v *= f;
 	return v;
 }
+
+Vector3D addVector3D(Vector3D v1, Vector3D v2)
+{
+	return Vector3D(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
+}
+
+float dot(Vector3D v1, Vector3D v2)
+{
+	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+}
