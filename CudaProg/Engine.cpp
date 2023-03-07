@@ -1,9 +1,5 @@
 #include "Engine.h"
 
-void o(Device dev, Map map, Camera cam) {
-	dev.ray_render(map, cam);
-}
-
 Engine::Engine(Window& wnd)
 	:
 	gfx(wnd.GetWindowWidth(), wnd.GetWindowHeight()),
@@ -15,7 +11,7 @@ Engine::Engine(Window& wnd)
 	//SleepIsGranular = (timeBeginPeriod(1) == TIMERR_NOERROR);
 	SetWindowTextA(wnd.GetCustomWindow(), "Ray-Tracing");
 
-	polygon p1(Vector3D(-1, 2, -1), Vector3D(-1, 2, 1), Vector3D(1, 2, 1));
+	polygon p1( Vector3D(-1, 2, 1), Vector3D(1, 2, 1),Vector3D(-1, 2, -1));
 	polygon p2(Vector3D(-1, 2, -1), Vector3D(1, 2, 1), Vector3D(1, 2, -1));
 	polygon p3(Vector3D(-1, 2, -1), Vector3D(1, 0, -1), Vector3D(-1, 0, -1));
 	polygon p4(Vector3D(1, 2, -1), Vector3D(1, 0, -1), Vector3D(-1, 2, -1));
@@ -26,7 +22,8 @@ Engine::Engine(Window& wnd)
 	polygon p9( Vector3D(-1, 2, 1),Vector3D(-1, 0, 1),   Vector3D(1, 0, 1) );
 	polygon p10(Vector3D(1, 2, 1) ,Vector3D(-1, 2, 1),   Vector3D(1, 0, 1) );
 	polygon* polygons = { new polygon[10] {p1, p2, p3, p4, p5, p6, p7, p8, p9, p10} };
-	int* colors_of_plygons = { new int[10] {13109770, 13109770, 706570, 706570, 658120, 658120, 658120, 658120, 706570, 706570} };
+	//int* colors_of_plygons = { new int[10] {13109770, 13109770, 706570, 706570, 658120, 658120, 658120, 658120, 706570, 706570} };
+	int* colors_of_plygons = { new int[10] {16777215, 16777215, 16777215, 16777215, 16777215, 16777215, 16777215, 16777215, 16777215, 16777215} };
 	StaticMesh* mesh = new StaticMesh(polygons, colors_of_plygons, 10);
 
 	polygon flor1(Vector3D(5, 0, 5), Vector3D(-5, 0, -5), Vector3D(-5, 0, 5));
@@ -37,7 +34,9 @@ Engine::Engine(Window& wnd)
 
 	Object* obj = { new Object[2] {Object(Vector3D(0, 0, 100), Vector3D(0, 0, 0), mesh), Object(Vector3D(0, 0, 100), Vector3D(0, 0, 0), flor_mesh)}};
 
-	map = new Map(obj, 12);
+	Lite* lites = { new Lite[1] {Lite(Vector3D(100, 50, 100), 200)} };
+
+	map = new Map(obj, 12, lites);
 }
 
 Engine::~Engine()
@@ -61,6 +60,7 @@ void Engine::Run(Window& wnd)
 		{
 			DWORD SleepMS = (DWORD)(1000.0f * (FPSMS - SecondsElapsedForFrame));
 			Sleep(SleepMS);
+
 			std::string str = std::to_string(1000 / (SleepMS + SecondsElapsedForFrame));
 			LPCSTR name = str.c_str();
 			SetWindowTextA(wnd.GetCustomWindow(), name);
@@ -123,7 +123,8 @@ float Engine::EngineGetSecondsElapsed(LARGE_INTEGER Start, LARGE_INTEGER End) co
 
 void Engine::ComposeFrame()
 {
-	dev.ray_render(*map, cam);
+	dev.ray_render(*map, cam, tick / 2);
+	map->object->rotation.x += 0.5;
 	
 	//Vector3D v = cam.getDirection();
 

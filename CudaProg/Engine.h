@@ -40,6 +40,6 @@ private:
 	Map* map = nullptr;
 private:
 	//Game stuff here
-	float speed = 2;
+	float speed = 0.8f;
 	float r_speed = 1;
 };

@@ -2,7 +2,7 @@
 
 Camera::Camera()
 	:
-	pos(-56, -35, -14),
+	pos(-14, -10, -78),
 	up(0, -1, 0),
 	angleX(-33),
 	angleY(-18)

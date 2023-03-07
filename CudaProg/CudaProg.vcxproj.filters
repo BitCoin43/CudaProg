@@ -46,6 +46,7 @@
     <ClCompile Include="StaticMesh.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="Polygon.cpp" />
+    <ClCompile Include="Lite.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine.h">
@@ -80,6 +81,7 @@
     <ClInclude Include="Object.h" />
     <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="Polygon.h" />
+    <ClInclude Include="Lite.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Текст.txt" />
