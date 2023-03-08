@@ -39,6 +39,14 @@
       <Filter>CodeFiles</Filter>
     </ClCompile>
     <ClCompile Include="Vector.cpp" />
+    <ClCompile Include="Matrix.cpp" />
+    <ClCompile Include="plane.cpp" />
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Map.cpp" />
+    <ClCompile Include="StaticMesh.cpp" />
+    <ClCompile Include="Object.cpp" />
+    <ClCompile Include="Polygon.cpp" />
+    <ClCompile Include="Lite.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine.h">
@@ -67,5 +75,15 @@
     </ClInclude>
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Vector.h" />
+    <ClInclude Include="plane.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="Map.h" />
+    <ClInclude Include="Object.h" />
+    <ClInclude Include="StaticMesh.h" />
+    <ClInclude Include="Polygon.h" />
+    <ClInclude Include="Lite.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Текст.txt" />
   </ItemGroup>
 </Project>

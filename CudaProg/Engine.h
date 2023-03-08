@@ -4,6 +4,8 @@
 #include "Timer.h"
 #include <string>
 #include <thread>
+#include <chrono>
+#include "Map.h"
 #include "DeviceKernel.cuh"
 
 class Engine
@@ -29,12 +31,15 @@ private:
 	LARGE_INTEGER PerfCountFrequecyResult;
 	bool SleepIsGranular = true;
 	float PerfCountFrequency;
-	const float FPSMS = 1.0f / 144.0f;
-	int in = 0;
+	const float FPSMS = 1.0f / 142.0f;
+	float tick = 0;
+	
 
 	float cX = 0;
+	Camera cam;
+	Map* map = nullptr;
 private:
 	//Game stuff here
-	int playerx = 0;
-
+	float speed = 0.8f;
+	float r_speed = 1;
 };

@@ -9,11 +9,39 @@ Engine::Engine(Window& wnd)
 	QueryPerformanceFrequency(&PerfCountFrequecyResult);
 	PerfCountFrequency = (float)(PerfCountFrequecyResult.QuadPart);
 	//SleepIsGranular = (timeBeginPeriod(1) == TIMERR_NOERROR);
-	SetWindowTextA(wnd.GetCustomWindow(), "Winframework");
+	SetWindowTextA(wnd.GetCustomWindow(), "Ray-Tracing");
+
+	polygon p1( Vector3D(-1, 2, 1), Vector3D(1, 2, 1),Vector3D(-1, 2, -1));
+	polygon p2(Vector3D(-1, 2, -1), Vector3D(1, 2, 1), Vector3D(1, 2, -1));
+	polygon p3(Vector3D(-1, 2, -1), Vector3D(1, 0, -1), Vector3D(-1, 0, -1));
+	polygon p4(Vector3D(1, 2, -1), Vector3D(1, 0, -1), Vector3D(-1, 2, -1));
+	polygon p5(Vector3D(1, 2, 1), Vector3D(1, 0, -1), Vector3D(1, 2, -1));
+	polygon p6(Vector3D(1, 0, -1), Vector3D(1, 2, 1), Vector3D(1, 0, 1));
+	polygon p7(Vector3D(-1, 0, -1),Vector3D(-1, 2, 1),  Vector3D(-1, 2, -1));
+	polygon p8( Vector3D(-1, 2, 1),Vector3D(-1, 0, -1), Vector3D(-1, 0, 1));
+	polygon p9( Vector3D(-1, 2, 1),Vector3D(-1, 0, 1),   Vector3D(1, 0, 1) );
+	polygon p10(Vector3D(1, 2, 1) ,Vector3D(-1, 2, 1),   Vector3D(1, 0, 1) );
+	polygon* polygons = { new polygon[10] {p1, p2, p3, p4, p5, p6, p7, p8, p9, p10} };
+	//int* colors_of_plygons = { new int[10] {13109770, 13109770, 706570, 706570, 658120, 658120, 658120, 658120, 706570, 706570} };
+	int* colors_of_plygons = { new int[10] {16777215, 16777215, 16777215, 16777215, 16777215, 16777215, 16777215, 16777215, 16777215, 16777215} };
+	StaticMesh* mesh = new StaticMesh(polygons, colors_of_plygons, 10);
+
+	polygon flor1(Vector3D(7, 0, 7), Vector3D(-7, 0, -7), Vector3D(-7, 0, 7));
+	polygon flor2(Vector3D(-7, 0, -7), Vector3D(7, 0, 7), Vector3D(7, 0, -7));
+	polygon* flor_polygons = { new polygon[2] {flor1, flor2} };
+	int* flor_colors_of_polygons = { new int[2] {9408399, 9408399} };
+	StaticMesh* flor_mesh = new StaticMesh(flor_polygons, flor_colors_of_polygons, 2);
+
+	Object* obj = { new Object[2] {Object(Vector3D(0, 0, 100), Vector3D(0, 0, 0), mesh), Object(Vector3D(0, 0, 100), Vector3D(0, 0, 0), flor_mesh)}};
+
+	Lite* lites = { new Lite[1] {Lite(Vector3D(80, 48, 100), 200)} };
+
+	map = new Map(obj, 12, lites);
 }
 
 Engine::~Engine()
 {
+	//delete map;
 }
 
 void Engine::Run(Window& wnd)
@@ -32,6 +60,10 @@ void Engine::Run(Window& wnd)
 		{
 			DWORD SleepMS = (DWORD)(1000.0f * (FPSMS - SecondsElapsedForFrame));
 			Sleep(SleepMS);
+
+			std::string str = std::to_string(1000 / (SleepMS + SecondsElapsedForFrame));
+			LPCSTR name = str.c_str();
+			SetWindowTextA(wnd.GetCustomWindow(), name);
 		}
 		SecondsElapsedForFrame = EngineGetSecondsElapsed(LastCounter, EngineGetWallClock());
 	}
@@ -40,6 +72,8 @@ void Engine::Run(Window& wnd)
 
 	cX = 1.0f / SecondsElapsedForFrame;
 	Update(wnd);
+	tick += 1;
+	if (tick > 144) tick = 0;
 	ComposeFrame();
 
 	LARGE_INTEGER EndCounter = EngineGetWallClock();
@@ -48,24 +82,30 @@ void Engine::Run(Window& wnd)
 
 void Engine::Update(Window& wnd)
 {
+	if (wnd.kbd.KeyIsPressed('D'))	cam.pos += multiple(crossProduct(normalize(cam.getDirection()), cam.up) , speed);
+	
+	if (wnd.kbd.KeyIsPressed('A'))	cam.pos -= multiple(crossProduct(normalize(cam.getDirection()), cam.up), speed);
 
-	if (wnd.kbd.KeyIsPressed('W'))
-	{
-		playerx += 3;
-	}
-	if (wnd.kbd.KeyIsPressed('S'))
-	{
-		playerx -= 3;
-	}
-	if (wnd.kbd.KeyIsPressed('A'))
-	{
+	if (wnd.kbd.KeyIsPressed('F'))	cam.pos.y += speed;
 
-	}
-	if (wnd.kbd.KeyIsPressed('D'))
-	{
+	if (wnd.kbd.KeyIsPressed('R'))	cam.pos.y -= speed;
 
-	}
+	if (wnd.kbd.KeyIsPressed('S'))	cam.pos += multiple(normalize(cam.getDirection()), speed);
 
+	if (wnd.kbd.KeyIsPressed('W'))	cam.pos -= multiple(normalize(cam.getDirection()), speed);
+
+	if (wnd.kbd.KeyIsPressed('Z'))  cam.angleX += r_speed;
+												 
+	if (wnd.kbd.KeyIsPressed('C'))	cam.angleX -= r_speed;
+												 
+	if (wnd.kbd.KeyIsPressed('G'))	cam.angleY += r_speed;
+												 
+	if (wnd.kbd.KeyIsPressed('T'))	cam.angleY -= r_speed;
+
+	if (wnd.kbd.KeyIsPressed('N')) {
+		cam.angleX += 0.6;
+		cam.pos += multiple(crossProduct(normalize(cam.getDirection()), cam.up), speed);
+	}
 }
 
 LARGE_INTEGER Engine::EngineGetWallClock() const
@@ -83,21 +123,20 @@ float Engine::EngineGetSecondsElapsed(LARGE_INTEGER Start, LARGE_INTEGER End) co
 
 void Engine::ComposeFrame()
 {
-	//gfx.ClearScreenSuperFast(Colors);
-	//*********************************************************************************
-	//gfx.DrawElips(Colors, 240, 240, 200, 200, 20, 200);
-
-
-	dev.drawCircle(200, 200, 100, 200, 200, 0);
-
-	//dev.drawLine(10, 20, 40, 50, 255, 255, 255);
-
+	dev.ray_render(*map, cam, tick / 2);
+	map->object->rotation.x += 0.5;
 	
-	dev.drawPoligon(20, 10, 400, 50, 200, 180, 255, 255, 255);
-	
+	//Vector3D v = cam.getDirection();
 
+	dev.drawPixel(tick, 0, 255, 255, 255);
+	dev.drawPixel(144, 1, 255, 255, 255);
+	//dev.drawPixel(540, 360, 255, 255, 255);
 
 	//*********************************************************************************
 	dev.copyDeviceToHost(*Colors);
-	dev.cleanDeviceMem(100, 100, 100);
+	dev.cleanDeviceMem(30, 30, 30);
+	////*********************************************************************************
+	
+	//gfx.DrawAlphaRectangle(Colors, 100, 300, 100, 300, 0, 255, 0, in);
+	
 }

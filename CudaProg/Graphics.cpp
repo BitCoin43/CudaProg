@@ -34,6 +34,30 @@ void Graphics::DrawPixel(int* Colors, int x, int y, unsigned char r, unsigned ch
 	}
 }
 
+void Graphics::DrawAlphaPixel(int* Colors, int x, int y, unsigned char r, unsigned char g, unsigned char b, unsigned char a)
+{
+	if (x > 0 && x < WinWidth && y > 0 && y < WinHeight)
+	{
+		int color = Colors[y * WinWidth + x];
+
+		float r_b = (color >> 16) / 255.0;
+		float g_b = (color << 16 >> 24) / 255.0;
+		float b_b = (color << 16 >> 16) / 255.0;
+
+		float r_u = r / 255.0;
+		float g_u = g / 255.0;
+		float b_u = b / 255.0;
+
+		float al = a / 255.0;
+
+		unsigned char r_r = (r_u * al + r_b * (1 - al)) * 255;
+		unsigned char g_r = (g_u * al + g_b * (1 - al)) * 255;
+		unsigned char b_r = (b_u * al + b_b * (1 - al)) * 255;
+
+		Colors[y * WinWidth + x] = (r_r << 16) | (g_r << 8) | b_r;
+	}
+}
+
 void Graphics::DrawRectancle(int* Colors, int xMin, int xMax, int yMin, int yMax, unsigned char r, unsigned char g, unsigned char b)
 {
 	for (int y = yMin; y < yMax; y++)
@@ -41,6 +65,17 @@ void Graphics::DrawRectancle(int* Colors, int xMin, int xMax, int yMin, int yMax
 		for (int x = xMin; x < xMax; x++)
 		{
 			DrawPixel(Colors, x, y, r, g, b);
+		}
+	}
+}
+
+void Graphics::DrawAlphaRectangle(int* Colors, int xMin, int xMax, int yMin, int yMax, unsigned char r, unsigned char g, unsigned char b, unsigned char a)
+{
+	for (int y = yMin; y < yMax; y++)
+	{
+		for (int x = xMin; x < xMax; x++)
+		{
+			DrawAlphaPixel(Colors, x, y, r, g, b, a);
 		}
 	}
 }
