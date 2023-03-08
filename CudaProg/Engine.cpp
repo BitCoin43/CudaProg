@@ -26,15 +26,15 @@ Engine::Engine(Window& wnd)
 	int* colors_of_plygons = { new int[10] {16777215, 16777215, 16777215, 16777215, 16777215, 16777215, 16777215, 16777215, 16777215, 16777215} };
 	StaticMesh* mesh = new StaticMesh(polygons, colors_of_plygons, 10);
 
-	polygon flor1(Vector3D(5, 0, 5), Vector3D(-5, 0, -5), Vector3D(-5, 0, 5));
-	polygon flor2(Vector3D(-5, 0, -5), Vector3D(5, 0, 5), Vector3D(5, 0, -5));
+	polygon flor1(Vector3D(7, 0, 7), Vector3D(-7, 0, -7), Vector3D(-7, 0, 7));
+	polygon flor2(Vector3D(-7, 0, -7), Vector3D(7, 0, 7), Vector3D(7, 0, -7));
 	polygon* flor_polygons = { new polygon[2] {flor1, flor2} };
 	int* flor_colors_of_polygons = { new int[2] {9408399, 9408399} };
 	StaticMesh* flor_mesh = new StaticMesh(flor_polygons, flor_colors_of_polygons, 2);
 
 	Object* obj = { new Object[2] {Object(Vector3D(0, 0, 100), Vector3D(0, 0, 0), mesh), Object(Vector3D(0, 0, 100), Vector3D(0, 0, 0), flor_mesh)}};
 
-	Lite* lites = { new Lite[1] {Lite(Vector3D(100, 50, 100), 200)} };
+	Lite* lites = { new Lite[1] {Lite(Vector3D(80, 48, 100), 200)} };
 
 	map = new Map(obj, 12, lites);
 }

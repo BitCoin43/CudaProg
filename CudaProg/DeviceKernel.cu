@@ -20,24 +20,24 @@ __device__ inline void DPdev(int* dev_mem, int x, int y, int width, int height, 
 }
 
 __device__ inline void DP_ARGB_dev(int* dev_mem, int x, int y, int width, int height, unsigned char r, unsigned char g, unsigned char b, unsigned char a) {
-	if (x >= 0 && x < width && y >= 0 && y < height){
-			int color = dev_mem[y * width + x];
+	if (x >= 0 && x < width && y >= 0 && y < height) {
+		int color = dev_mem[y * width + x];
 
-			float r_b = ((color >> 16) & 0x000000ff) / 255.0;
-			float g_b = ((color >> 8) & 0x000000ff) / 255.0;
-			float b_b = (color & 0x000000ff) / 255.0;
+		float r_b = ((color >> 16) & 0x000000ff) / 255.0;
+		float g_b = ((color >> 8) & 0x000000ff) / 255.0;
+		float b_b = (color & 0x000000ff) / 255.0;
 
-			float r_u = r / 255.0;
-			float g_u = g / 255.0;
-			float b_u = b / 255.0;
+		float r_u = r / 255.0;
+		float g_u = g / 255.0;
+		float b_u = b / 255.0;
 
-			float al = a / 255.0;
+		float al = a / 255.0;
 
-			unsigned char r_r = (r_u * al + r_b * (1 - al)) * 255;
-			unsigned char g_r = (g_u * al + g_b * (1 - al)) * 255;
-			unsigned char b_r = (b_u * al + b_b * (1 - al)) * 255;
+		unsigned char r_r = (r_u * al + r_b * (1 - al)) * 255;
+		unsigned char g_r = (g_u * al + g_b * (1 - al)) * 255;
+		unsigned char b_r = (b_u * al + b_b * (1 - al)) * 255;
 
-			dev_mem[y * width + x] = (r_r << 16) | (g_r << 8) | b_r;
+		dev_mem[y * width + x] = (r_r << 16) | (g_r << 8) | b_r;
 	}
 }
 
@@ -92,20 +92,20 @@ __global__ void renderCircle(int* dev_mem, int x1, int y1, int R, int width, int
 
 __global__ void renderLine(int* dev_mem, const int width, const int height, const float x0, const float y0, const float x1, const float y1, unsigned char r, unsigned char g, unsigned char b)
 {
-    int x = blockIdx.x; int y = blockIdx.y;
+	int x = blockIdx.x; int y = blockIdx.y;
 
-    if (x >= width || y >= height)
-        return;
+	if (x >= width || y >= height)
+		return;
 
-    float AB = std::sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
-    float AС = std::sqrt((x - x0) * (x - x0) + (y - y0) * (y - y0));
-    float СB = std::sqrt((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y));
+	float AB = std::sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
+	float AС = std::sqrt((x - x0) * (x - x0) + (y - y0) * (y - y0));
+	float СB = std::sqrt((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y));
 
-    // adjust threshold to make the line thicker
-    const float threshold = 0.1f;
-    if (std::fabs(AB - (AС + СB)) <= threshold) {
+	// adjust threshold to make the line thicker
+	const float threshold = 0.1f;
+	if (std::fabs(AB - (AС + СB)) <= threshold) {
 		DPdev(dev_mem, x0 + x, y0 + y, width, height, r, g, b);
-    }
+	}
 }
 
 __global__ void renderPoligon(int* dev_mem, int xmin, int ymin, int x1, int y1, int x2, int y2, int x3, int y3, int width, int height, unsigned char r, unsigned char g, unsigned char b) {
@@ -113,8 +113,8 @@ __global__ void renderPoligon(int* dev_mem, int xmin, int ymin, int x1, int y1, 
 	int a = (x1 - x) * (y2 - y1) - (x2 - x1) * (y1 - y);
 	int B = (x2 - x) * (y3 - y2) - (x3 - x2) * (y2 - y);
 	int c = (x3 - x) * (y1 - y3) - (x1 - x3) * (y3 - y);
-	
-	if ((a >= 0 && B >= 0 && c >= 0) || (a <= 0 && B <= 0 && c <= 0)){
+
+	if ((a >= 0 && B >= 0 && c >= 0) || (a <= 0 && B <= 0 && c <= 0)) {
 		DPdev(dev_mem, blockIdx.x + xmin, blockIdx.y + ymin, width, height, r, g, b);
 	}
 }
@@ -132,22 +132,9 @@ __device__ int NormalizePoint() {
 
 }
 
-__global__ void getInt_dev(int* dev_mem, int *c, int width, int x, int y) {
+__global__ void getInt_dev(int* dev_mem, int* c, int width, int x, int y) {
 	*c = dev_mem[y * width + x];
 }
-
-/*__device__ inline Vector3D cross(Vector3D origin, Vector3D direction, polygon poly) {
-	Vector3D E1 = poly.facets[1]; E1 -= poly.facets[0];
-	Vector3D E2 = poly.facets[2]; E2 -= poly.facets[0];
-	Vector3D T = origin; T -= poly.facets[0];
-	Vector3D P = crossProduct(direction, E2);
-	Vector3D Q = crossProduct(T, E1);
-	float t = (1 / dot(P, E1)) * dot(Q, E2);
-	float u = (1 / dot(P, E1)) * dot(P, T);
-	float v = (1 / dot(P, E1)) * dot(Q, direction);
-	Vector3D r = addVector3D(multiple(poly.facets[1], (1 - u - v)), addVector3D(multiple(poly.facets[2], u), multiple(poly.facets[0], v)));
-	return r;
-}*/
 
 __device__ inline float squarOfTriangle(float a, float b, float c) {
 	float p = (a + b + c) / 2;
@@ -159,12 +146,12 @@ __device__ bool in_t(float3 p, float3 poly[3]) {
 		return false;
 	}
 	bool inside = false;
-	float AB = sqrt((poly[0].x - poly[1].x) * (poly[0].x - poly[1].x) + (poly[0].y - poly[1].y) * (poly[0].y - 
-				     poly[1].y) + (poly[0].z - poly[1].z) * (poly[0].z - poly[1].z));
-	float BC = sqrt((poly[1].x - poly[2].x) * (poly[1].x - poly[2].x) + (poly[1].y - poly[2].y) * (poly[1].y - 
-				     poly[2].y) + (poly[1].z - poly[2].z) * (poly[1].z - poly[2].z));
-	float CA = sqrt((poly[0].x - poly[2].x) * (poly[0].x - poly[2].x) + (poly[0].y - poly[2].y) * (poly[0].y - 
-				     poly[2].y) + (poly[0].z - poly[2].z) * (poly[0].z - poly[2].z));
+	float AB = sqrt((poly[0].x - poly[1].x) * (poly[0].x - poly[1].x) + (poly[0].y - poly[1].y) * (poly[0].y -
+		poly[1].y) + (poly[0].z - poly[1].z) * (poly[0].z - poly[1].z));
+	float BC = sqrt((poly[1].x - poly[2].x) * (poly[1].x - poly[2].x) + (poly[1].y - poly[2].y) * (poly[1].y -
+		poly[2].y) + (poly[1].z - poly[2].z) * (poly[1].z - poly[2].z));
+	float CA = sqrt((poly[0].x - poly[2].x) * (poly[0].x - poly[2].x) + (poly[0].y - poly[2].y) * (poly[0].y -
+		poly[2].y) + (poly[0].z - poly[2].z) * (poly[0].z - poly[2].z));
 
 	float AP = sqrt((p.x - poly[0].x) * (p.x - poly[0].x) + (p.y - poly[0].y) * (p.y - poly[0].y) + (p.z - poly[0].z) * (p.z - poly[0].z));
 	float BP = sqrt((p.x - poly[1].x) * (p.x - poly[1].x) + (p.y - poly[1].y) * (p.y - poly[1].y) + (p.z - poly[1].z) * (p.z - poly[1].z));
@@ -191,7 +178,7 @@ __device__ bool EQV(float3& f1, float3& f2) {
 	return f1.x == f2.x && f1.y == f2.y && f1.z == f2.z;
 }
 
-__device__ bool fabs_f3(float3& f1, float3& f2,const float& s) {
+__device__ bool fabs_f3(float3& f1, float3& f2, const float& s) {
 	float x = f1.x - f2.x;	if (x < 0) x *= -1;
 	float y = f1.y - f2.y;	if (y < 0) y *= -1;
 	float z = f1.z - f2.z;	if (z < 0) z *= -1;
@@ -235,7 +222,7 @@ __device__ float3 getNormal(float3& p0, float3& p1, float3& p2) {
 	return n;
 }
 
-__device__ float rayTriangleIntersect(float3& origin,float3& direction,float3& p0,float3& p1,float3& p2,float minT) {
+__device__ float rayTriangleIntersect(float3& origin, float3& direction, float3& p0, float3& p1, float3& p2, float minT) {
 	const float kNoIntersection = FLT_MAX;
 
 	float3 e1 = MIN_f3(p1, p0);
@@ -243,14 +230,14 @@ __device__ float rayTriangleIntersect(float3& origin,float3& direction,float3& p
 	float3 n = crossProduct_f3(e1, e2);
 	float dot = dot_f3(n, direction);
 
-	if(!(dot < 0.0f)) return kNoIntersection;
+	if (!(dot < 0.0f)) return kNoIntersection;
 
 	float d = dot_f3(n, p0);
 	float t = d - dot_f3(n, origin);
 
-	if(!(t<= 0.0f)) return kNoIntersection;
-	if(!(t >= dot * minT)) return kNoIntersection;
-	
+	if (!(t <= 0.0f)) return kNoIntersection;
+	if (!(t >= dot * minT)) return kNoIntersection;
+
 	t /= dot;
 	float3 p = ADD_f3(origin, MLT_f3(direction, t));
 
@@ -279,11 +266,11 @@ __device__ float rayTriangleIntersect(float3& origin,float3& direction,float3& p
 			u0 = p.x - p0.x;
 			u1 = p1.x - p0.x;
 			u2 = p2.x - p0.x;
-			v0 = p.z -p0.z;
+			v0 = p.z - p0.z;
 			v1 = p1.z - p0.z;
 			v2 = p2.z - p0.z;
-		}			  
-		else {		  
+		}
+		else {
 			u0 = p.x - p0.x;
 			u1 = p1.x - p0.x;
 			u2 = p2.x - p0.x;
@@ -295,7 +282,7 @@ __device__ float rayTriangleIntersect(float3& origin,float3& direction,float3& p
 	float temp = u1 * v2 - v1 * u2;
 	if (!(temp != 0.0f)) {
 		return kNoIntersection;
-	} 
+	}
 	temp = 1.0f / temp;
 
 	float alpha = (u0 * v2 - v0 * u2) * temp;
@@ -306,12 +293,12 @@ __device__ float rayTriangleIntersect(float3& origin,float3& direction,float3& p
 	if (!(gamma >= 0.0f)) 	return kNoIntersection;
 
 	return t;
- } 
+}
 
 __device__ inline float4 cross(float3 origin, float3 dir, float3 poly[3]) {
 	float3 E1 = MIN_f3(poly[1], poly[0]);
 	float3 E2 = MIN_f3(poly[2], poly[0]);
-	float3 T  = MIN_f3(origin, poly[0]);
+	float3 T = MIN_f3(origin, poly[0]);
 	float3 P = crossProduct_f3(dir, E2);
 	float3 Q = crossProduct_f3(T, E1);
 	float t = (1 / dot_f3(P, E1)) * dot_f3(Q, E2);
@@ -319,7 +306,7 @@ __device__ inline float4 cross(float3 origin, float3 dir, float3 poly[3]) {
 	float v = (1 / dot_f3(P, E1)) * dot_f3(Q, dir);
 	float3 r = ADD_f3(MLT_f3(poly[1], (1 - u - v)), ADD_f3(MLT_f3(poly[2], u), MLT_f3(poly[0], v)));
 	float3 l = ADD_f3(origin, MLT_f3(dir, t));
-	if (fabs_f3(r, l, FLT_MAX)){
+	if (fabs_f3(r, l, FLT_MAX)) {
 		return make_float4(r.x, r.y, r.z, t);
 	}
 	return make_float4(0, 0, 0, 0);
@@ -329,9 +316,9 @@ __global__ void ray_tracing(int* dev_mem, int width, int height, float3* poly, i
 	int x = threadIdx.x + blockIdx.x * blockDim.x;
 	int y = threadIdx.y + blockIdx.y * blockDim.y;
 	if (x <= width && y <= height) {
-		
+
 		float s = FLT_MAX;
-		unsigned char I = 10;
+		unsigned char Intens = 10;
 		int color_index = 0;
 		bool is = false;
 		float3 end[3] = {};
@@ -345,28 +332,42 @@ __global__ void ray_tracing(int* dev_mem, int width, int height, float3* poly, i
 					s = p;
 					is = true;
 					color_index = i;
+					
 					end[0] = polygon[0];
 					end[1] = polygon[1];
 					end[2] = polygon[2];
-					
-
-
 				}
 			}
 		}
-		float3 P = make_float3(lites[0].x, lites[0].y, lites[0].z);
-		if (true) {
-			float3 L = MIN_f3(P, MLT_f3(dir, s));
-			float3 N = getNormal(end[0], end[1], end[2]);
-			float n_dot = dot_f3(N, L);
-			if (n_dot > 0) {
-				I += lites[0].w * n_dot / (getLength(N) * getLength(L));
-			}
-
-		}
 		if (is) {
-			//DPdev(dev_mem, x, y, width, height, colors[color_index]);
-			DPdev(dev_mem, x, y, width, height, getColorOnBlakc(colors[color_index], I));
+			float3 P = make_float3(lites[0].x, lites[0].y, lites[0].z);
+			float3 G = MLT_f3(dir, s);
+			float3 L = MIN_f3(P, G);
+			bool wall = true;
+			for (int i = 0; i < countOfAllPolygons; i++) {
+				if (i != color_index) {
+
+					//float t =  rayTriangleIntersect(G,P ,  poly[i * 3], poly[i * 3 + 1], poly[i * 3 + 2], 0);
+					float3 polygon[3] = { poly[i * 3], poly[i * 3 + 1], poly[i * 3 + 2] };
+
+					if (rayTriangleIntersect(G, L, polygon[0], polygon[1], polygon[2], 10) != FLT_MAX) {
+						wall = false;
+						break;
+					}
+				}
+			}
+			if (wall) {
+				
+				float3 N = getNormal(end[0], end[1], end[2]);
+				float n_dot = dot_f3(N, L);
+				if (n_dot > 0) {
+					Intens += lites[0].w * n_dot / (getLength(N) * getLength(L));
+				}
+
+			}
+			
+			DPdev(dev_mem, x, y, width, height, getColorOnBlakc(colors[color_index], Intens));
+			
 		}
 		//DP_ARGB_dev(dev_mem, x, y, width, height, 0, 0, 255, 100);
 	}
@@ -393,7 +394,7 @@ void Device::copyDeviceToHost(int& Colors)
 void Device::cleanDeviceMem(unsigned char r, unsigned char g, unsigned char b)
 {
 	dim3 grid(dev_width, dev_height);
-	clean <<<grid, 1 >>> (dev_mem, dev_width, dev_height, r, g, b);
+	clean << <grid, 1 >> > (dev_mem, dev_width, dev_height, r, g, b);
 }
 
 void Device::drawPixel(int x, int y, unsigned char r, unsigned char g, unsigned char b)
@@ -410,7 +411,7 @@ void Device::drawCircle(int x, int y, int R, unsigned char r, unsigned char g, u
 void Device::drawLine(int x0, int y0, int x1, int y1, unsigned char r, unsigned char g, unsigned char b)
 {
 	dim3 grid(x1 - x0, y1 - y0);
-	renderLine <<<grid, 1>>>(dev_mem, dev_width, dev_height, x0, y0, x1, y1, r, g, b);
+	renderLine << <grid, 1 >> > (dev_mem, dev_width, dev_height, x0, y0, x1, y1, r, g, b);
 }
 
 void Device::drawPoligon(int x1, int y1, int x2, int y2, int x3, int y3, unsigned char r, unsigned char g, unsigned char b)
@@ -423,15 +424,15 @@ void Device::drawPoligon(int x1, int y1, int x2, int y2, int x3, int y3, unsigne
 	if (x1 <= x2 && x1 <= x3) xmin = x1;
 	if (x2 <= x1 && x2 <= x3) xmin = x2;
 	if (x3 <= x2 && x3 <= x1) xmin = x3;
-						
+
 	if (y1 <= y2 && y1 <= y3)	ymin = y1;
 	if (y2 <= y1 && y2 <= y3)	ymin = y2;
 	if (y3 <= y2 && y3 <= y1)	ymin = y3;
-						
+
 	if (x1 >= x2 && x1 >= x3) xmax = x1;
 	if (x2 >= x1 && x2 >= x3) xmax = x2;
 	if (x3 >= x2 && x3 >= x1) xmax = x3;
-							 
+
 	if (y1 >= y2 && y1 >= y3)	ymax = y1;
 	if (y2 >= y1 && y2 >= y3)	ymax = y2;
 	if (y3 >= y2 && y3 >= y1)	ymax = y3;
@@ -443,7 +444,7 @@ void Device::drawPoligon(int x1, int y1, int x2, int y2, int x3, int y3, unsigne
 void Device::drawRect(int x1, int x2, int y1, int y2, unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 {
 	dim3 grid(x2 - x1, y2 - y1);
-	renderRect_dev<<<grid, 1>>>(dev_mem, x1, y1, dev_width, dev_height, r, g, b, a);
+	renderRect_dev << <grid, 1 >> > (dev_mem, x1, y1, dev_width, dev_height, r, g, b, a);
 }
 
 float Device::normalizePointX(float p, float z)
@@ -485,7 +486,7 @@ void Device::ray_render(Map& map, Camera& cam, float angle)
 {
 	polygon* polygons = { new polygon[map.count_of_all_polygons] {} };
 	int* colors = { new int[map.count_of_all_polygons] {} };
-	
+
 
 	Matrix hp(translate(cam.pos));
 	Matrix m = rotateZ(180);
@@ -505,7 +506,7 @@ void Device::ray_render(Map& map, Camera& cam, float angle)
 			polygon p = b.mesh->polygons[j];
 			int color = b.mesh->colors_of_polygons[j];
 			for (int k = 0; k < 3; k++) {
-				
+
 				p.facets[k] = multyply(p.facets[k], rotateY(b.rotation.x));
 				p.facets[k] += b.position;
 				p.facets[k] = multyply(p.facets[k], m);
@@ -526,7 +527,7 @@ void Device::ray_render(Map& map, Camera& cam, float angle)
 		host_end_poly[i * 3 + 1] = make_float3(p.facets[1].x, p.facets[1].y, p.facets[1].z);
 		host_end_poly[i * 3 + 2] = make_float3(p.facets[2].x, p.facets[2].y, p.facets[2].z);
 	}
-	
+
 	cudaMalloc((void**)&dev_end_poly, sizeof(float3) * 3 * map.count_of_all_polygons);
 	cudaMemcpy(dev_end_poly, host_end_poly, sizeof(float3) * 3 * map.count_of_all_polygons, cudaMemcpyHostToDevice);
 
@@ -554,7 +555,7 @@ void Device::ray_render(Map& map, Camera& cam, float angle)
 	dim3 blocks(w, h);
 	dim3 theads(32, 32);
 
-	ray_tracing<<<blocks, theads>>>(dev_mem, dev_width, dev_height, dev_end_poly, dev_colors, map.count_of_all_polygons, dev_lites, map.count_of_lites);
+	ray_tracing << <blocks, theads >> > (dev_mem, dev_width, dev_height, dev_end_poly, dev_colors, map.count_of_all_polygons, dev_lites, map.count_of_lites);
 	cudaFree(dev_end_poly);
 	cudaFree(dev_colors);
 	cudaFree(dev_lites);
