@@ -58,6 +58,7 @@
       <MaxRegCount>0</MaxRegCount>
       <FastMath>true</FastMath>
       <Optimization>InheritFromHost</Optimization>
+      <CudaRuntime>Static</CudaRuntime>
     </CudaCompile>
     <CudaLink>
       <Optimization>InheritFromProject</Optimization>
@@ -83,7 +84,6 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CudaCompile Include="DeviceKernel.cu" />
     <CudaCompile Include="path_tracing.cu" />
   </ItemGroup>
   <ItemGroup>
@@ -106,7 +106,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cuda3dmath.cuh" />
-    <ClInclude Include="DeviceKernel.cuh" />
+    <CudaCompile Include="DeviceKernel.cuh" />
     <ClInclude Include="Engine.h" />
     <ClInclude Include="FPScontroller.h" />
     <ClInclude Include="Graphics.h" />
@@ -119,6 +119,7 @@
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="Polygon.h" />
+    <ClInclude Include="Render.cuh" />
     <ClInclude Include="SphereTree.cuh" />
     <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="Vector.h" />

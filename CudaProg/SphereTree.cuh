@@ -1,4 +1,4 @@
-#include "cuda3dmath.cuh"
+#include "Render.cuh"
 
 class Node {
 public:
@@ -22,7 +22,7 @@ __device__ void mi(Node* n, const float3& ray_origin, const float3& ray_directio
 
         }
         else if (intersect_ray_sphere(ray_origin, ray_direction, n->sphere, n->radius)) {
-            mi(n, ray_origin, ray_direction, poly, intersect, poly_ind, point);
+            //mi(n, ray_origin, ray_direction, poly, intersect, poly_ind, point);
         }
     }
 }

@@ -5,6 +5,8 @@
 #include <device_functions.h>
 #include <stdio.h>
 #include <vector_functions.h>
+#include <cuda_runtime.h>
+#include <cooperative_groups.h>
 
 
 inline __device__ float dot(const float3& v1, const float3& v2) {

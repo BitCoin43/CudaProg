@@ -12,10 +12,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="DeviceKernel.cu">
+    <CudaCompile Include="path_tracing.cu" />
+    <CudaCompile Include="DeviceKernel.cuh">
       <Filter>CudaFiles</Filter>
     </CudaCompile>
-    <CudaCompile Include="path_tracing.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MainCode.cpp">
@@ -66,9 +66,6 @@
     <ClInclude Include="Mouse.h">
       <Filter>HeaderFiles</Filter>
     </ClInclude>
-    <ClInclude Include="DeviceKernel.cuh">
-      <Filter>CudaFiles</Filter>
-    </ClInclude>
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Vector.h" />
     <ClInclude Include="plane.h" />
@@ -81,6 +78,7 @@
     <ClInclude Include="FPScontroller.h" />
     <ClInclude Include="SphereTree.cuh" />
     <ClInclude Include="cuda3dmath.cuh" />
+    <ClInclude Include="Render.cuh" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Текст.txt" />
