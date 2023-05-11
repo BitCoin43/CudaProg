@@ -1,7 +1,5 @@
 #pragma once
 #include "WinLib.h"
-#include "Keyboard.h"
-#include "Mouse.h"
 
 class Window
 {

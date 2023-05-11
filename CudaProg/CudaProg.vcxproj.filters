@@ -15,9 +15,10 @@
     <CudaCompile Include="DeviceKernel.cu">
       <Filter>CudaFiles</Filter>
     </CudaCompile>
+    <CudaCompile Include="path_tracing.cu" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Main.cpp">
+    <ClCompile Include="MainCode.cpp">
       <Filter>CodeFiles</Filter>
     </ClCompile>
     <ClCompile Include="Engine.cpp">
@@ -35,9 +36,6 @@
     <ClCompile Include="Window.cpp">
       <Filter>CodeFiles</Filter>
     </ClCompile>
-    <ClCompile Include="Timer.cpp">
-      <Filter>CodeFiles</Filter>
-    </ClCompile>
     <ClCompile Include="Vector.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="plane.cpp" />
@@ -47,6 +45,7 @@
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="Polygon.cpp" />
     <ClCompile Include="Lite.cpp" />
+    <ClCompile Include="FPScontroller.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine.h">
@@ -67,9 +66,6 @@
     <ClInclude Include="Mouse.h">
       <Filter>HeaderFiles</Filter>
     </ClInclude>
-    <ClInclude Include="Timer.h">
-      <Filter>HeaderFiles</Filter>
-    </ClInclude>
     <ClInclude Include="DeviceKernel.cuh">
       <Filter>CudaFiles</Filter>
     </ClInclude>
@@ -82,6 +78,9 @@
     <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="Polygon.h" />
     <ClInclude Include="Lite.h" />
+    <ClInclude Include="FPScontroller.h" />
+    <ClInclude Include="SphereTree.cuh" />
+    <ClInclude Include="cuda3dmath.cuh" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Текст.txt" />

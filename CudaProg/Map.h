@@ -5,13 +5,13 @@
 
 class Map {
 public:
-	Map(Object* obj, int countOfPolygons, Lite* lites);
+	Map(Object* obj, int countOfPolygons, int countOfObjects, Lite* lites);
 	~Map();
 
 	Object* object;
-	int count_of_objects = 2;
+	int count_of_objects = 5;
 	int count_of_all_polygons =  12;
 
 	Lite* lites;
-	int count_of_lites = 1;
+	int count_of_lites = 2;
 };

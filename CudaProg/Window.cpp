@@ -24,9 +24,9 @@ Window::Window(int width, int height, HINSTANCE hInstance)
 	RegisterClassExA(&wc);
 	// create window & get hWnd
 	RECT wr;
-	wr.left = 220;
+	wr.left = 0;
 	wr.right = WindowWidth + wr.left;
-	wr.top = 30;
+	wr.top = 36;
 	wr.bottom = WindowHeight + wr.top;
 	AdjustWindowRect(&wr, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, FALSE);
 

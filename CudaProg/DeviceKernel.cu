@@ -1,13 +1,8 @@
-﻿#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
+﻿#include  "DeviceKernel.cuh"
+//#pragma diag_suppress = code_is_unreachable
 
-#include <stdio.h>
-
-#include "DeviceKernel.cuh"
-#include <cmath>
-#include <algorithm>
-
-__device__ inline void DPdev(int* dev_mem, int x, int y, int width, int height, unsigned char r, unsigned char g, unsigned char b) {
+__device__ inline void DPdev(int* dev_mem, int x, int y, int width, int height, 
+	unsigned char r, unsigned char g, unsigned char b) {
 	if (x >= 0 && x < width && y >= 0 && y < height) {
 		dev_mem[y * width + x] = (r << 16) | (g << 8) | b;
 	}
@@ -19,7 +14,8 @@ __device__ inline void DPdev(int* dev_mem, int x, int y, int width, int height, 
 	}
 }
 
-__device__ inline void DP_ARGB_dev(int* dev_mem, int x, int y, int width, int height, unsigned char r, unsigned char g, unsigned char b, unsigned char a) {
+__device__ inline void DP_ARGB_dev(int* dev_mem, int x, int y, int width, int height,
+	unsigned char r, unsigned char g, unsigned char b, unsigned char a) {
 	if (x >= 0 && x < width && y >= 0 && y < height) {
 		int color = dev_mem[y * width + x];
 
@@ -54,13 +50,15 @@ __device__ int getColorOnBlakc(int color, unsigned char I) {
 	return (r_r << 16) | (g_r << 8) | b_r;
 }
 
-__global__ void DPglobal(int* dev_mem, int x, int y, int width, int height, unsigned char r, unsigned char g, unsigned char b) {
+__global__ void DPglobal(int* dev_mem, int x, int y, int width, int height, 
+	unsigned char r, unsigned char g, unsigned char b) {
 	if (x >= 0 && x < width && y >= 0 && y < height) {
 		dev_mem[y * width + x] = (r << 16) | (g << 8) | b;
 	}
 }
 
-__global__ void DP_ARGB_global(int* dev_mem, int x, int y, int width, int height, unsigned char r, unsigned char g, unsigned char b, unsigned char a) {
+__global__ void DP_ARGB_global(int* dev_mem, int x, int y, int width, int height,
+	unsigned char r, unsigned char g, unsigned char b, unsigned char a) {
 	if (x >= 0 && x < width && y >= 0 && y < height) {
 		int color = dev_mem[y * width + x];
 
@@ -82,7 +80,8 @@ __global__ void DP_ARGB_global(int* dev_mem, int x, int y, int width, int height
 	}
 }
 
-__global__ void renderCircle(int* dev_mem, int x1, int y1, int R, int width, int height, unsigned char r, unsigned char g, unsigned char b) {
+__global__ void renderCircle(int* dev_mem, int x1, int y1, int R, int width, int height, 
+	unsigned char r, unsigned char g, unsigned char b) {
 	//DPdev(dev_mem, x + blockIdx.x, y + blockIdx.y, width, height, r, g, b);
 	int x = blockIdx.x - R; int y = blockIdx.y - R;
 	if (x * x + y * y <= (R - 0.5) * (R - 0.5)) {
@@ -90,7 +89,28 @@ __global__ void renderCircle(int* dev_mem, int x1, int y1, int R, int width, int
 	}
 }
 
-__global__ void renderLine(int* dev_mem, const int width, const int height, const float x0, const float y0, const float x1, const float y1, unsigned char r, unsigned char g, unsigned char b)
+__global__ void renderCircleMSAA16x(int* dev_mem, int* colorMap, int x1, int y1, int R, int width, int height, 
+	unsigned char r, unsigned char g, unsigned char b) {
+	int x = threadIdx.x + blockIdx.x * blockDim.x - R / 16;
+	int y = threadIdx.y + blockIdx.y * blockDim.y - R / 16;
+
+	int x2 = x / 16;
+	int y2 = y / 16;
+	if (x2 * x2 + y2 * y2 <= (R / 16 - 0.5) * (R / 16 - 0.5)) {
+		colorMap[y2 * R / 16 * 2 + x2] += 1;
+		//DP_ARGB_dev(dev_mem, x2 + x1, y2 + y1, width, height, r, g, b, 255);
+
+	}
+	//block.sync();
+
+	unsigned char a =  colorMap[y2 * R / 16 * 2 + x2];
+	//if (x % 16 == 0 && y % 16 == 0) {
+	DP_ARGB_dev(dev_mem, x / 16 + x1, y / 16 + y1, width, height, r, g, b, a);
+	//}qqqqqqqqqqqqqqqqqqqqqqqqqqqqq
+}
+
+__global__ void renderLine(int* dev_mem, const int width, const int height, const float x0, const float y0, const float x1, const float y1, 
+	unsigned char r, unsigned char g, unsigned char b)
 {
 	int x = blockIdx.x; int y = blockIdx.y;
 
@@ -108,7 +128,8 @@ __global__ void renderLine(int* dev_mem, const int width, const int height, cons
 	}
 }
 
-__global__ void renderPoligon(int* dev_mem, int xmin, int ymin, int x1, int y1, int x2, int y2, int x3, int y3, int width, int height, unsigned char r, unsigned char g, unsigned char b) {
+__global__ void renderPoligon(int* dev_mem, int xmin, int ymin, int x1, int y1, int x2, int y2, int x3, int y3, int width, int height, 
+	unsigned char r, unsigned char g, unsigned char b) {
 	int x = blockIdx.x + xmin; int y = blockIdx.y + ymin;
 	int a = (x1 - x) * (y2 - y1) - (x2 - x1) * (y1 - y);
 	int B = (x2 - x) * (y3 - y2) - (x3 - x2) * (y2 - y);
@@ -119,12 +140,14 @@ __global__ void renderPoligon(int* dev_mem, int xmin, int ymin, int x1, int y1, 
 	}
 }
 
-__global__ void renderRect_dev(int* dev_mem, int xmin, int ymin, int width, int height, unsigned char r, unsigned char g, unsigned char b, unsigned char a) {
+__global__ void renderRect_dev(int* dev_mem, int xmin, int ymin, int width, int height, 
+	unsigned char r, unsigned char g, unsigned char b, unsigned char a) {
 	int x = blockIdx.x + xmin; int y = blockIdx.y + ymin;
 	DP_ARGB_dev(dev_mem, x, y, width, height, r, g, b, a);
 }
 
-__global__ void clean(int* dev_mem, int width, int height, unsigned char r, unsigned char g, unsigned char b) {
+__global__ void clean(int* dev_mem, int width, int height, 
+	unsigned char r, unsigned char g, unsigned char b) {
 	dev_mem[blockIdx.y * width + blockIdx.x] = (r << 16) | (g << 8) | b;
 }
 
@@ -162,18 +185,6 @@ __device__ bool in_t(float3 p, float3 poly[3]) {
 
 }
 
-__device__ inline float3 MIN_f3(float3& f1, float3& f2) {
-	return make_float3(f1.x - f2.x, f1.y - f2.y, f1.z - f2.z);
-}
-
-__device__ inline float3 ADD_f3(float3& f1, float3& f2) {
-	return make_float3(f1.x + f2.x, f1.y + f2.y, f1.z + f2.z);
-}
-
-__device__ inline float3 MLT_f3(float3& f, float s) {
-	return make_float3(f.x * s, f.y * s, f.z * s);
-}
-
 __device__ bool EQV(float3& f1, float3& f2) {
 	return f1.x == f2.x && f1.y == f2.y && f1.z == f2.z;
 }
@@ -190,10 +201,6 @@ __device__ float3 crossProduct_f3(float3& v1, float3& v2) {
 		v1.y * v2.z - v1.z * v2.y,
 		v1.z * v2.x - v1.x * v2.z,
 		v1.x * v2.y - v1.y * v2.x);
-}
-
-__device__ float dot_f3(float3& v1, float3& v2) {
-	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
 
 __device__ float getLength(float3& f) {
@@ -216,161 +223,72 @@ __device__ float3 getNormal(float3& p0, float3& p1, float3& p2) {
 		x,
 		y,
 		z);*/
-	float3 e1 = MIN_f3(p1, p0);
-	float3 e2 = MIN_f3(p2, p1);
+	float3 e1 = p1 - p0;
+	float3 e2 = p2 - p1;
 	float3 n = crossProduct_f3(e1, e2);
 	return n;
 }
 
-__device__ float rayTriangleIntersect(float3& origin, float3& direction, float3& p0, float3& p1, float3& p2, float minT) {
-	const float kNoIntersection = FLT_MAX;
+__global__ void ray_tracing(int* dev_mem, int width, int height, float3* poly, 
+	int* colors, int countOfAllPolygons, float4* lites, int count_of_lites) {
 
-	float3 e1 = MIN_f3(p1, p0);
-	float3 e2 = MIN_f3(p2, p1);
-	float3 n = crossProduct_f3(e1, e2);
-	float dot = dot_f3(n, direction);
+	int x = blockIdx.x * blockDim.x + threadIdx.x;
+	int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-	if (!(dot < 0.0f)) return kNoIntersection;
-
-	float d = dot_f3(n, p0);
-	float t = d - dot_f3(n, origin);
-
-	if (!(t <= 0.0f)) return kNoIntersection;
-	if (!(t >= dot * minT)) return kNoIntersection;
-
-	t /= dot;
-	float3 p = ADD_f3(origin, MLT_f3(direction, t));
-
-	float u0, u1, u2;
-	float v0, v1, v2;
-	if (fabs(n.x) > fabs(n.y)) {
-		if (fabs(n.x) > fabs(n.z)) {
-			u0 = p.y - p0.y;
-			u1 = p1.y - p0.y;
-			u2 = p2.y - p0.y;
-			v0 = p.z - p0.z;
-			v1 = p1.z - p0.z;
-			v2 = p2.z - p0.z;
-		}
-		else {
-			u0 = p.x - p0.x;
-			u1 = p1.x - p0.x;
-			u2 = p2.x - p0.x;
-			v0 = p.y - p0.y;
-			v1 = p1.y - p0.y;
-			v2 = p2.y - p0.y;
-		}
-	}
-	else {
-		if (fabs(n.y) > fabs(n.z)) {
-			u0 = p.x - p0.x;
-			u1 = p1.x - p0.x;
-			u2 = p2.x - p0.x;
-			v0 = p.z - p0.z;
-			v1 = p1.z - p0.z;
-			v2 = p2.z - p0.z;
-		}
-		else {
-			u0 = p.x - p0.x;
-			u1 = p1.x - p0.x;
-			u2 = p2.x - p0.x;
-			v0 = p.y - p0.y;
-			v1 = p1.y - p0.y;
-			v2 = p2.y - p0.y;
-		}
-	}
-	float temp = u1 * v2 - v1 * u2;
-	if (!(temp != 0.0f)) {
-		return kNoIntersection;
-	}
-	temp = 1.0f / temp;
-
-	float alpha = (u0 * v2 - v0 * u2) * temp;
-	if (!(alpha >= 0.0f))	return kNoIntersection;
-	float beta = (u1 * v0 - v1 * u0) * temp;
-	if (!(beta >= 0.0f))	return kNoIntersection;
-	float gamma = 1.0f - alpha - beta;
-	if (!(gamma >= 0.0f)) 	return kNoIntersection;
-
-	return t;
-}
-
-__device__ inline float4 cross(float3 origin, float3 dir, float3 poly[3]) {
-	float3 E1 = MIN_f3(poly[1], poly[0]);
-	float3 E2 = MIN_f3(poly[2], poly[0]);
-	float3 T = MIN_f3(origin, poly[0]);
-	float3 P = crossProduct_f3(dir, E2);
-	float3 Q = crossProduct_f3(T, E1);
-	float t = (1 / dot_f3(P, E1)) * dot_f3(Q, E2);
-	float u = (1 / dot_f3(P, E1)) * dot_f3(P, T);
-	float v = (1 / dot_f3(P, E1)) * dot_f3(Q, dir);
-	float3 r = ADD_f3(MLT_f3(poly[1], (1 - u - v)), ADD_f3(MLT_f3(poly[2], u), MLT_f3(poly[0], v)));
-	float3 l = ADD_f3(origin, MLT_f3(dir, t));
-	if (fabs_f3(r, l, FLT_MAX)) {
-		return make_float4(r.x, r.y, r.z, t);
-	}
-	return make_float4(0, 0, 0, 0);
-}
-
-__global__ void ray_tracing(int* dev_mem, int width, int height, float3* poly, int* colors, int countOfAllPolygons, float4* lites, int count_of_lites) {
-	int x = threadIdx.x + blockIdx.x * blockDim.x;
-	int y = threadIdx.y + blockIdx.y * blockDim.y;
-	if (x <= width && y <= height) {
-
-		float s = FLT_MAX;
-		unsigned char Intens = 10;
+	if (x < width && y < height) {
+		float s = 999999999999999999.0;
+		unsigned char Intens = 40;
 		int color_index = 0;
 		bool is = false;
 		float3 end[3] = {};
-		float3 dir = make_float3(x - width / 2, y - height / 2, width * 1.0);
+		float3 dir = make_float3(x - (width >> 1), y - (height >> 1), width * 1.0);
+
 		for (int i = 0; i < countOfAllPolygons; i++) {
 			float3 polygon[3] = { poly[i * 3], poly[i * 3 + 1], poly[i * 3 + 2] };
-			//float4 p = cross(make_float3(0, 0, 0), dir, polygon);
-			float p = rayTriangleIntersect(make_float3(0, 0, 0), dir, polygon[0], polygon[1], polygon[2], 10);
-			if (p != FLT_MAX) {
-				if (p < s) {
-					s = p;
-					is = true;
-					color_index = i;
-					
-					end[0] = polygon[0];
-					end[1] = polygon[1];
-					end[2] = polygon[2];
-				}
+			float p = RayTriangleIntersection(make_float3(0, 0, 0), dir, polygon[0], polygon[1], polygon[2]);
+			if (p < s) {
+				s = p;
+				is = true;
+				color_index = i;
+				end[0] = polygon[0];
+				end[1] = polygon[1];
+				end[2] = polygon[2];
 			}
 		}
+
 		if (is) {
-			float3 P = make_float3(lites[0].x, lites[0].y, lites[0].z);
-			float3 G = MLT_f3(dir, s);
-			float3 L = MIN_f3(P, G);
-			bool wall = true;
-			for (int i = 0; i < countOfAllPolygons; i++) {
-				if (i != color_index) {
+			float3 G = dir* s;
 
-					//float t =  rayTriangleIntersect(G,P ,  poly[i * 3], poly[i * 3 + 1], poly[i * 3 + 2], 0);
-					float3 polygon[3] = { poly[i * 3], poly[i * 3 + 1], poly[i * 3 + 2] };
-
-					if (rayTriangleIntersect(G, L, polygon[0], polygon[1], polygon[2], 10) != FLT_MAX) {
-						wall = false;
-						break;
+			for (int j = 0; j < count_of_lites; j++) {
+				float3 P = make_float3(lites[j].x, lites[j].y, lites[j].z);
+				float3 L = P - G;
+				float3 EndPoint;
+				bool wall = true;
+				for (int i = 0; i < countOfAllPolygons; i++) {
+					if (i != color_index) {
+						if (-1 != RayTriangleIntersection(G, L, poly[i * 3], poly[i * 3 + 1], poly[i * 3 + 2])) {
+							wall = false;
+							break;
+						}
+					}
+				}
+				if (wall) {
+					float3 N = getNormal(end[0], end[1], end[2]);
+					float n_dot = dot(N, L);
+					if (n_dot > 0) {
+						Intens += lites[0].w * n_dot / (getLength(N) * getLength(L));
 					}
 				}
 			}
-			if (wall) {
-				
-				float3 N = getNormal(end[0], end[1], end[2]);
-				float n_dot = dot_f3(N, L);
-				if (n_dot > 0) {
-					Intens += lites[0].w * n_dot / (getLength(N) * getLength(L));
-				}
-
-			}
-			
 			DPdev(dev_mem, x, y, width, height, getColorOnBlakc(colors[color_index], Intens));
-			
 		}
-		//DP_ARGB_dev(dev_mem, x, y, width, height, 0, 0, 255, 100);
 	}
+}
+
+__global__ void path_tracing_1(int* dev_mem, int width, int height, float3* poly, 
+	int* colors, int countOfAllPolygons, float4* lites, int count_of_lites) {
+	int x = threadIdx.x + blockIdx.x * blockDim.x;
+	int y = threadIdx.y + blockIdx.y * blockDim.y;
 }
 
 Device::Device(int height, int width, int* Colors)
@@ -406,6 +324,16 @@ void Device::drawCircle(int x, int y, int R, unsigned char r, unsigned char g, u
 {
 	dim3 grid(R * 2, R * 2);
 	renderCircle << <grid, 1 >> > (dev_mem, x, y, R, dev_width, dev_height, r, g, b);
+}
+
+void Device::drawCircleMSAA16x(int x, int y, int R, unsigned char r, unsigned char g, unsigned char b)
+{
+	int* colorMap = nullptr;
+	cudaMalloc((void**)&colorMap, sizeof(int) * R * R);
+	dim3 grid(R * 2, R * 2);
+	dim3 theads(16, 16);
+	renderCircleMSAA16x << <grid, theads >> > (dev_mem, colorMap, x, y, R * 16, dev_width, dev_height, r, g, b);
+	cudaFree(colorMap);
 }
 
 void Device::drawLine(int x0, int y0, int x1, int y1, unsigned char r, unsigned char g, unsigned char b)
@@ -482,12 +410,8 @@ void Device::drawMap_p(Map map, Camera cam)
 
 }
 
-void Device::ray_render(Map& map, Camera& cam, float angle)
+void Device::activateMap(Map& map, Camera& cam)
 {
-	polygon* polygons = { new polygon[map.count_of_all_polygons] {} };
-	int* colors = { new int[map.count_of_all_polygons] {} };
-
-
 	Matrix hp(translate(cam.pos));
 	Matrix m = rotateZ(180);
 	Matrix l = rotateY(cam.angleX);
@@ -496,8 +420,129 @@ void Device::ray_render(Map& map, Camera& cam, float angle)
 	m *= l;
 	m *= hp;
 
+	int* colors = { new int[map.count_of_all_polygons] {} };
+
+	int counter = 0;
+	for (int i = 0; i < map.count_of_objects; i++) {
+		Object b = *(map.object + i);
+		int cofp = b.mesh->count_of_polygons;
+		for (int j = 0; j < cofp; j++) {
+			colors[counter] = b.mesh->colors_of_polygons[j];
+			counter++;
+
+		}
+	}
+	float4* lites = { new float4[map.count_of_lites]{} };
+	for (int i = 0; i < map.count_of_lites; i++) {
+		Lite lite = *(map.lites + i);
+		Vector3D pos = multyply(lite.position, m);
+		lites[i] = make_float4(pos.x, pos.y, pos.z, lite.Intensity);
+	}
+	cudaMalloc((void**)&dev_lites, sizeof(float4) * map.count_of_lites);
+	cudaMemcpy(dev_lites, lites, sizeof(float4) * map.count_of_lites, cudaMemcpyHostToDevice);
+
+	cudaMalloc((void**)&intersection_matrix, sizeof(float) * map.count_of_all_polygons * dev_width * dev_height);
+	cudaMalloc((void**)&ray_matrix_direction, sizeof(float3) * dev_width * dev_height);
+	cudaMalloc((void**)&ray_matrix_origin, sizeof(float3) * dev_width * dev_height);
+
+	cudaMalloc((void**)&dev_colors, sizeof(int) * map.count_of_all_polygons);
+	cudaMemcpy(dev_colors, colors, sizeof(int) * map.count_of_all_polygons, cudaMemcpyHostToDevice);
+	polygon* polygons = { new polygon[map.count_of_all_polygons] {} };
+	//int* colors = { new int[map.count_of_all_polygons] {} };
+
+
+
+
+	//std::thread th(uploadLites, std::ref(map), m, std::cref(dev_lites));
+
+
 	int coo = map.count_of_objects;
 
+	int counter2 = 0;
+	for (int i = 0; i < coo; i++) {
+		Object b = *(map.object + i);
+		int cofp = b.mesh->count_of_polygons;
+		for (int j = 0; j < cofp; j++) {
+			polygon p = b.mesh->polygons[j];
+			int color = b.mesh->colors_of_polygons[j];
+			for (int k = 0; k < 3; k++) {
+
+				p.facets[k] = multyply(p.facets[k], rotateY(b.rotation.x));
+				p.facets[k] += b.position;
+				p.facets[k] = multyply(p.facets[k], m);
+			}
+			polygons[counter2] = p;
+			counter2++;
+
+		}
+	}
+	float3* host_end_poly = { new float3[3 * map.count_of_all_polygons] {} };
+	dev_poly = nullptr;
+
+	for (int i = 0; i < map.count_of_all_polygons; i++) {
+		polygon p = polygons[i];
+		host_end_poly[i * 3 + 0] = make_float3(p.facets[0].x, p.facets[0].y, p.facets[0].z);
+		host_end_poly[i * 3 + 1] = make_float3(p.facets[1].x, p.facets[1].y, p.facets[1].z);
+		host_end_poly[i * 3 + 2] = make_float3(p.facets[2].x, p.facets[2].y, p.facets[2].z);
+	}
+
+	cudaMalloc((void**)&dev_poly, sizeof(float3) * 3 * map.count_of_all_polygons);
+	cudaMemcpy(dev_poly, host_end_poly, sizeof(float3) * 3 * map.count_of_all_polygons, cudaMemcpyHostToDevice);
+	delete[] colors;
+}
+
+void uploadLites(Map& map , Matrix m, float4* dev_lites) {
+	float4* lites = { new float4[map.count_of_lites]{} };
+	for (int i = 0; i < map.count_of_lites; i++) {
+		Lite lite = *(map.lites + i);
+		Vector3D pos = multyply(lite.position, m);
+		lites[i] = make_float4(pos.x, pos.y, pos.z, lite.Intensity);
+	}
+	cudaMalloc((void**)&dev_lites, sizeof(float4) * map.count_of_lites);
+	cudaMemcpy(dev_lites, lites, sizeof(float4) * map.count_of_lites, cudaMemcpyHostToDevice);
+}
+
+void Device::ray_render(Map& map, Camera& cam, float angle)
+{
+
+	int r = 32;
+	int w = dev_width / r;
+	int h = dev_height / r;
+	if (dev_width % r != 0) w++;
+	if (dev_height % r != 0) h++;
+
+	dim3 blocks(w, h);
+	dim3 theads(r, r);
+
+	ray_tracing <<< blocks, theads >>> (dev_mem, dev_width, dev_height, dev_poly, 
+		dev_colors, map.count_of_all_polygons, dev_lites, map.count_of_lites);
+	//delete[] lites;
+}
+
+void Device::path_tracing(Map& map, Camera& cam, float angle)
+{
+	Matrix hp(translate(cam.pos));
+	Matrix m = rotateZ(180);
+	Matrix l = rotateY(cam.angleX);
+	Matrix k = rotateX(cam.angleY);
+	m *= k;
+	m *= l;
+	m *= hp;
+
+	//========================================================================
+	float4* lites = { new float4[map.count_of_lites]{} };
+	for (int i = 0; i < map.count_of_lites; i++) {
+		Lite lite = *(map.lites + i);
+		Vector3D pos = multyply(lite.position, m);
+		lites[i] = make_float4(pos.x, pos.y, pos.z, lite.Intensity);
+	}
+	cudaMalloc((void**)&dev_lites, sizeof(float4) * map.count_of_lites);
+	cudaMemcpy(dev_lites, lites, sizeof(float4) * map.count_of_lites, cudaMemcpyHostToDevice);
+	//========================================================================
+
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	int coo = map.count_of_objects;
+	polygon* polygons = { new polygon[map.count_of_all_polygons] {} };
 	int counter = 0;
 	for (int i = 0; i < coo; i++) {
 		Object b = *(map.object + i);
@@ -512,12 +557,13 @@ void Device::ray_render(Map& map, Camera& cam, float angle)
 				p.facets[k] = multyply(p.facets[k], m);
 			}
 			polygons[counter] = p;
-			colors[counter] = color;
 			counter++;
 
 		}
 	}
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+	//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 	float3* host_end_poly = { new float3[3 * map.count_of_all_polygons] {} };
 	float3* dev_end_poly = nullptr;
 
@@ -527,27 +573,12 @@ void Device::ray_render(Map& map, Camera& cam, float angle)
 		host_end_poly[i * 3 + 1] = make_float3(p.facets[1].x, p.facets[1].y, p.facets[1].z);
 		host_end_poly[i * 3 + 2] = make_float3(p.facets[2].x, p.facets[2].y, p.facets[2].z);
 	}
+	//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 	cudaMalloc((void**)&dev_end_poly, sizeof(float3) * 3 * map.count_of_all_polygons);
 	cudaMemcpy(dev_end_poly, host_end_poly, sizeof(float3) * 3 * map.count_of_all_polygons, cudaMemcpyHostToDevice);
 
-	int* dev_colors = nullptr;
-
-	cudaMalloc((void**)&dev_colors, sizeof(int) * map.count_of_all_polygons);
-	cudaMemcpy(dev_colors, colors, sizeof(int) * map.count_of_all_polygons, cudaMemcpyHostToDevice);
-
-	float4* dev_lites = nullptr;
-
-	float4* lites = { new float4[map.count_of_lites]{} };
-	for (int i = 0; i < map.count_of_lites; i++) {
-		Lite lite = *(map.lites + i);
-		Vector3D pos = multyply(lite.position, m);
-		lites[i] = make_float4(pos.x, pos.y, pos.z, lite.Intensity);
-	}
-	cudaMalloc((void**)&dev_lites, sizeof(float4) * map.count_of_lites);
-	cudaMemcpy(dev_lites, lites, sizeof(float4) * map.count_of_lites, cudaMemcpyHostToDevice);
-
-	int w = 1080 / 32;
+	int w = dev_width / 32;
 	int h = dev_height / 32;
 	if (dev_width % 32 != 0) w++;
 	if (dev_height % 32 != 0) h++;
@@ -555,13 +586,27 @@ void Device::ray_render(Map& map, Camera& cam, float angle)
 	dim3 blocks(w, h);
 	dim3 theads(32, 32);
 
-	ray_tracing << <blocks, theads >> > (dev_mem, dev_width, dev_height, dev_end_poly, dev_colors, map.count_of_all_polygons, dev_lites, map.count_of_lites);
-	cudaFree(dev_end_poly);
-	cudaFree(dev_colors);
-	cudaFree(dev_lites);
-	delete host_end_poly;
-	delete polygons;
-	delete colors;
-	delete lites;
+	// for n (intersection poly) -> buffer; analyse; change n
+	// 
+	
+	//newtrace << < blocks, theads >> > (intersection_matrix, ray_matrix_direction, dev_width, dev_height, dev_end_poly, 0, map.count_of_all_polygons);
+	
+
+
+
+	//ray_tracing << <blocks, theads >> > (dev_mem, dev_width, dev_height, dev_end_poly, dev_colors, map.count_of_all_polygons, dev_lites, map.count_of_lites);
+	delete[] host_end_poly;
+	delete[] polygons;
 }
+
+void Device::buil_sphere_tree(Map& map)
+{
+	for (int i = 0; i < map.count_of_all_polygons; i++) {
+		float3 sphere = make_float3(0, 0, 0);
+		Node n(1, sphere, 8);
+		cudaMalloc((void**)&main_tree, sizeof(Node));
+		cudaMemcpy(main_tree, &n, sizeof(Node), cudaMemcpyHostToDevice);
+	}
+}
+
 

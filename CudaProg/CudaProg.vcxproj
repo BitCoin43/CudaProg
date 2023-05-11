@@ -55,7 +55,13 @@
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
+      <MaxRegCount>0</MaxRegCount>
+      <FastMath>true</FastMath>
+      <Optimization>InheritFromHost</Optimization>
     </CudaCompile>
+    <CudaLink>
+      <Optimization>InheritFromProject</Optimization>
+    </CudaLink>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -78,28 +84,31 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <CudaCompile Include="DeviceKernel.cu" />
+    <CudaCompile Include="path_tracing.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Engine.cpp" />
+    <ClCompile Include="FPScontroller.cpp" />
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="Lite.cpp" />
     <ClCompile Include="Map.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="plane.cpp" />
     <ClCompile Include="Keyboarg.cpp" />
-    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MainCode.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="Polygon.cpp" />
     <ClCompile Include="StaticMesh.cpp" />
-    <ClCompile Include="Timer.cpp" />
     <ClCompile Include="Vector.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="cuda3dmath.cuh" />
     <ClInclude Include="DeviceKernel.cuh" />
     <ClInclude Include="Engine.h" />
+    <ClInclude Include="FPScontroller.h" />
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Lite.h" />
@@ -110,8 +119,8 @@
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="Polygon.h" />
+    <ClInclude Include="SphereTree.cuh" />
     <ClInclude Include="StaticMesh.h" />
-    <ClInclude Include="Timer.h" />
     <ClInclude Include="Vector.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="Winlib.h" />
