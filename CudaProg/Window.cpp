@@ -89,6 +89,11 @@ void Window::ClearScreenSuperFast()
 	memset(Colors, 0, WindowWidth * WindowHeight * 4);
 }
 
+void Window::RunLoop()
+{
+	run = RunMessageLoop();
+}
+
 void Window::ResizeDIB(int BitmapWidth, int BitmapHeight)
 {
 	if (Colors)

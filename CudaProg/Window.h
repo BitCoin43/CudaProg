@@ -19,9 +19,12 @@ private:
 
 	void ResizeDIB(int BitmapWidth, int BitmapHeight);
 	void ClearScreenSuperFast();
+
+	
 public:
 	void UpdateWindowBuffer(HDC hdc, int BitmapWidth, int BitmapHeight);
 	int* GetColorBuffer();
+	void RunLoop();
 private:
 	HINSTANCE hInst;
 	HWND hwnd = nullptr;
@@ -31,7 +34,7 @@ private:
 	int WindowHeight;
 	LPSTR pClassName = new TCHAR[1];
 
-
+	bool run = 1;
 public:
 	Keyboard kbd;
 	Mouse mouse;

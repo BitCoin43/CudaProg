@@ -62,6 +62,8 @@
     </CudaCompile>
     <CudaLink>
       <Optimization>InheritFromProject</Optimization>
+      <PerformDeviceLink>true</PerformDeviceLink>
+      <UseHostLibraryDirectories>true</UseHostLibraryDirectories>
     </CudaLink>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -84,7 +86,7 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CudaCompile Include="path_tracing.cu" />
+    <CudaCompile Include="DeviceKernel.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
@@ -119,7 +121,6 @@
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="Polygon.h" />
-    <ClInclude Include="Render.cuh" />
     <ClInclude Include="SphereTree.cuh" />
     <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="Vector.h" />

@@ -62,6 +62,7 @@ Engine::Engine(Window& wnd)
 
 	map = new Map(obj, 36, 6, lites);
 	dev.activateMap(*map, cam);
+	dev.buil_sphere_tree(*map, cam);
 }
 
 Engine::~Engine()
@@ -154,11 +155,11 @@ float Engine::EngineGetSecondsElapsed(LARGE_INTEGER Start, LARGE_INTEGER End) co
 
 void Engine::ComposeFrame()
 {
-	//dev.copyDeviceToHost(*Colors);
-	//dev.cleanDeviceMem(30, 30, 30);
-	gfx.DrawAlphaRectangle(Colors, 10, 100, 10, 100, 255, 90, 30, 125);
+	dev.copyDeviceToHost(*Colors);
+	dev.cleanDeviceMem(30, 30, 30);
 
-	//dev.ray_render(*map, cam, 1);
+	
+	dev.ray_render(*map, cam, 1);
 	//map->object->rotation.x += 1.5;
 	//dev.path_tracing(*map, cam, 1);
 
