@@ -1,10 +1,9 @@
 #pragma once
 #include <chrono>
 
-class Timer
-{
+class FPScontroller {
 public:
-	Timer();
+	FPScontroller();
 	float Go();
 private:
 	std::chrono::steady_clock::time_point last;

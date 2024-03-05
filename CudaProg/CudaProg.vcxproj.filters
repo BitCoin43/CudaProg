@@ -12,12 +12,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="DeviceKernel.cu">
+    <CudaCompile Include="DeviceKernel.cuh">
       <Filter>CudaFiles</Filter>
     </CudaCompile>
+    <CudaCompile Include="DeviceKernel.cu" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Main.cpp">
+    <ClCompile Include="MainCode.cpp">
       <Filter>CodeFiles</Filter>
     </ClCompile>
     <ClCompile Include="Engine.cpp">
@@ -35,10 +36,16 @@
     <ClCompile Include="Window.cpp">
       <Filter>CodeFiles</Filter>
     </ClCompile>
-    <ClCompile Include="Timer.cpp">
-      <Filter>CodeFiles</Filter>
-    </ClCompile>
     <ClCompile Include="Vector.cpp" />
+    <ClCompile Include="Matrix.cpp" />
+    <ClCompile Include="plane.cpp" />
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Map.cpp" />
+    <ClCompile Include="StaticMesh.cpp" />
+    <ClCompile Include="Object.cpp" />
+    <ClCompile Include="Polygon.cpp" />
+    <ClCompile Include="Lite.cpp" />
+    <ClCompile Include="FPScontroller.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine.h">
@@ -59,13 +66,20 @@
     <ClInclude Include="Mouse.h">
       <Filter>HeaderFiles</Filter>
     </ClInclude>
-    <ClInclude Include="Timer.h">
-      <Filter>HeaderFiles</Filter>
-    </ClInclude>
-    <ClInclude Include="DeviceKernel.cuh">
-      <Filter>CudaFiles</Filter>
-    </ClInclude>
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Vector.h" />
+    <ClInclude Include="plane.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="Map.h" />
+    <ClInclude Include="Object.h" />
+    <ClInclude Include="StaticMesh.h" />
+    <ClInclude Include="Polygon.h" />
+    <ClInclude Include="Lite.h" />
+    <ClInclude Include="FPScontroller.h" />
+    <ClInclude Include="SphereTree.cuh" />
+    <ClInclude Include="cuda3dmath.cuh" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Текст.txt" />
   </ItemGroup>
 </Project>

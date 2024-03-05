@@ -1,10 +1,11 @@
 #pragma once
 #include "Window.h"
 #include "Graphics.h"
-#include "Timer.h"
 #include <string>
 #include <thread>
+#include "Map.h"
 #include "DeviceKernel.cuh"
+#include "FPScontroller.h"
 
 class Engine
 {
@@ -24,17 +25,20 @@ private:
 	Graphics gfx;
 	Device dev;
 	int* Colors;
-	Timer ft;
+	FPScontroller ft;
 private:
 	LARGE_INTEGER PerfCountFrequecyResult;
 	bool SleepIsGranular = true;
 	float PerfCountFrequency;
 	const float FPSMS = 1.0f / 144.0f;
-	int in = 0;
+	float tick = 0;
+	
 
 	float cX = 0;
+	Camera cam;
+	Map* map = nullptr;
 private:
 	//Game stuff here
-	int playerx = 0;
-
+	float speed = 0.8f;
+	float r_speed = 1;
 };

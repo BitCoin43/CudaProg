@@ -55,7 +55,16 @@
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
+      <MaxRegCount>0</MaxRegCount>
+      <FastMath>true</FastMath>
+      <Optimization>InheritFromHost</Optimization>
+      <CudaRuntime>Static</CudaRuntime>
     </CudaCompile>
+    <CudaLink>
+      <Optimization>InheritFromProject</Optimization>
+      <PerformDeviceLink>true</PerformDeviceLink>
+      <UseHostLibraryDirectories>true</UseHostLibraryDirectories>
+    </CudaLink>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -80,26 +89,46 @@
     <CudaCompile Include="DeviceKernel.cu" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Engine.cpp" />
+    <ClCompile Include="FPScontroller.cpp" />
     <ClCompile Include="Graphics.cpp" />
+    <ClCompile Include="Lite.cpp" />
+    <ClCompile Include="Map.cpp" />
+    <ClCompile Include="Object.cpp" />
+    <ClCompile Include="plane.cpp" />
     <ClCompile Include="Keyboarg.cpp" />
-    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MainCode.cpp" />
+    <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="Mouse.cpp" />
-    <ClCompile Include="Timer.cpp" />
+    <ClCompile Include="Polygon.cpp" />
+    <ClCompile Include="StaticMesh.cpp" />
     <ClCompile Include="Vector.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DeviceKernel.cuh" />
+    <ClInclude Include="cuda3dmath.cuh" />
+    <CudaCompile Include="DeviceKernel.cuh" />
     <ClInclude Include="Engine.h" />
+    <ClInclude Include="FPScontroller.h" />
     <ClInclude Include="Graphics.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="Lite.h" />
+    <ClInclude Include="Map.h" />
+    <ClInclude Include="Object.h" />
+    <ClInclude Include="plane.h" />
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Mouse.h" />
-    <ClInclude Include="Timer.h" />
+    <ClInclude Include="Polygon.h" />
+    <ClInclude Include="SphereTree.cuh" />
+    <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="Vector.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="Winlib.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Текст.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
